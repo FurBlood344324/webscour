@@ -85,19 +85,11 @@ jobs:
           grep -q 'refusing to run as root' _site/install.sh
           diff -q install.sh _site/install.sh
 
-          # The marketplace must stay parseable and name a real plugin directory, or `claude
-          # plugin marketplace add` fails at the user's machine with a worse message than this.
-          python3 - <<'PYEOF'
-          import json, os, sys
-          m = json.load(open("_site/marketplace.json"))
-          if not m.get("name"):
-              sys.exit("marketplace.json has no name")
-          for plugin in m.get("plugins", []):
-              src = str(plugin.get("source", "")).lstrip("./")
-              if src and not os.path.isdir(src) and not src.endswith(".git"):
-                  sys.exit("marketplace plugin %r points at %r, which is not a directory here" % (plugin.get("name"), src))
-          print("marketplace.json: %s, %d plugin(s)" % (m["name"], len(m.get("plugins", []))))
-          PYEOF
+          # The marketplace must stay installable, or `claude plugin marketplace add` fails at
+          # the user's machine with a worse message than this. The rule lives in scripts/, not in
+          # a heredoc: `check.sh` runs the same script on the source file, so the committed copy
+          # and the served copy cannot be validated by two different opinions.
+          ./scripts/check-marketplace.sh _site/marketplace.json
 
       - uses: actions/upload-pages-artifact@v4
         with:

@@ -130,6 +130,10 @@ run_check tests "$PY" -m unittest discover -s tests
 run_check self-test "$PY" -m webscour --self-test
 run_check entry-point "$PY" -m webscour --version
 run_check tag "$ROOT/scripts/check-tag.sh"
+# The file that is served at https://wsc.ashina.live/marketplace.json, checked where it lives: a
+# source that is not installable is a failed `claude plugin install` on someone else's machine,
+# and pages.yml runs this same script on the served copy before deploying it.
+run_check marketplace "$ROOT/scripts/check-marketplace.sh"
 
 # ------------------------------------------------------------------ build + metadata
 if [ -z "$BUILD_PY" ] || [ -z "$TWINE_PY" ]; then
