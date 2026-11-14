@@ -9,6 +9,17 @@ Newest first. Notes no commit message can carry go here.
 The npm publish failed on 0.1.2 with a message no human should have needed to read: the workflow
 asked for credentials that it deliberately does not have.
 
+### Changed
+
+- The README opens with the drawing and the name as text, not with a picture of the word. A
+  wordmark drawn as paths has to be redrawn whenever the name changes, and a README already says
+  the name one line below the picture. The mark files are the whole identity now.
+
+### Added
+
+- A Claude Code section for the MCP server (`claude mcp add webscour -- wsc mcp`), which existed in
+  `mcp/README.md` and in the verb table but was missing from the page a user reads first.
+
 ### Fixed
 
 - The npm job now authenticates through OIDC trusted publishing: `id-token: write`, no

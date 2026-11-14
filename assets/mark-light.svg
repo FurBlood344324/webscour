@@ -3,7 +3,7 @@
   <!-- A page of cells, combed clean along one diagonal. Four cells on that diagonal are drawn as
        blades instead of blocks, which is the whole idea: the grid is what is being read, the
        diagonal is what is scraping it. No text, no gradient, no rounded corner. -->
-  <g class="ink">
+  <g fill="#1f2328">
     <rect x="4" y="36" width="24" height="24"/>
     <rect x="4" y="68" width="24" height="24"/>
     <rect x="4" y="100" width="24" height="24"/>
@@ -17,7 +17,7 @@
     <rect x="100" y="36" width="24" height="24"/>
     <rect x="100" y="68" width="24" height="24"/>
   </g>
-  <g class="ink" fill="none" stroke-width="7" stroke-linecap="butt">
+  <g fill="none" stroke="#1f2328" stroke-width="7" stroke-linecap="butt">
     <path d="M4 26 L26 4"/>
     <path d="M36 58 L58 36"/>
     <path d="M68 90 L90 68"/>

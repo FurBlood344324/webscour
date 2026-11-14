@@ -1,12 +1,13 @@
 <p align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
-    <img src="assets/logo-light.svg" alt="webscour" width="460">
+    <source media="(prefers-color-scheme: dark)" srcset="assets/mark-dark.svg">
+    <img src="assets/mark-light.svg" alt="webscour" width="112">
   </picture>
 </p>
 
 <p align="center">
-  <b>A keyless web CLI for agents.</b><br>
+  <b>webscour</b><br>
+  A keyless web CLI for agents.<br>
   Search, page text, PDFs, sitemaps and a polite crawl. No API key. No account. No log.
 </p>
 
@@ -111,6 +112,27 @@ whether its chromium build still matches the installed playwright package. A mis
 note. A missing lightpanda is a failure.
 
 `wsc setup` alone still means "install SearXNG"; `--all` does both installs in one run.
+
+### Claude Code, through MCP
+
+The tool is also an MCP server, so a client that speaks MCP can register it once and stop shelling out.
+Standard library only: there is no `mcp` package to install, and the server is a second door onto the same
+executable, not a second implementation.
+
+```bash
+claude mcp add webscour -- wsc mcp
+```
+
+That is the whole configuration: one tool named `web_scour` with `action`, `query`, `url`, `source`,
+`category`, `max_chars`, `grep`, `fresh` and `archive`. Every call runs the same argv builder the CLI uses,
+so a flag cannot mean one thing on the command line and another through the protocol.
+
+Fetched page text is returned inside explicit delimiters with a warning above it. A page can contain a
+prompt injection and the wrapper says so; a cooperating model treats the block as data. It is a signpost,
+not a sandbox, and `mcp/README.md` says exactly that.
+
+`mcp/README.md` also covers running it by hand, the pi route and the reason `wsc mcp` exists rather than
+`python3 -m mcp.server`.
 
 ### Agent skill
 
@@ -239,9 +261,10 @@ farms, structured extraction, and an API key. webscour is the opposite shape, a 
 one query, with no account, no credits and no state, and it tells you which engine or backend answered
 instead of hiding the plumbing. An MCP server is a transport: it puts the same kind of tool behind a
 protocol so a chat client can call it, and then something still has to be installed, run and authenticated.
-`wsc` is a plain executable that an agent, a shell script or a human calls the same way, which is why it has
-no server, no registered tool, and no process to keep alive. If you already run an MCP server for this, the
-only thing webscour adds is the local search backend and the pacing.
+`wsc` is a plain executable that an agent, a shell script or a human calls the same way, so no server has to
+be running for it to work. When a client only speaks MCP, `wsc mcp` exposes the same tool over stdio: one
+tool, standard library only, no `mcp` package to install. The CLI is the base representation; the server is
+a second door onto it, not a second implementation.
 
 ## Limitations
 
