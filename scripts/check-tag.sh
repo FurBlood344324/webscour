@@ -16,7 +16,13 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT" || exit 1
 PY="${PYTHON:-python3}"
 
-TAG="${1:-${GITHUB_REF_NAME:-}}"
+# Only a tag ref carries a tag name. GitHub sets GITHUB_REF_NAME to values like "1/merge" on a
+# pull-request run and to the branch name on a push, so reading it unconditionally reported a
+# mismatch that did not exist. GITHUB_REF_TYPE says which case this is.
+TAG="${1:-}"
+if [ -z "$TAG" ] && [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
+  TAG="${GITHUB_REF_NAME:-}"
+fi
 if [ -z "$TAG" ]; then
   TAG="$(git describe --tags --exact-match 2>/dev/null || true)"
 fi

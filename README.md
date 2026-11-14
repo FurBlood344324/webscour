@@ -1,10 +1,23 @@
-# webscour
+<p align="center">
+  <img src="assets/logo.svg" alt="webscour" width="460">
+</p>
 
-Linux only. One keyless CLI for the web: search, page text, PDFs, sitemaps and a polite crawl. No API key, no credits.
+<p align="center">
+  <b>webscour</b> is one keyless CLI for the web: search, page text, PDFs, sitemaps and a polite crawl.<br>
+  No API key. No account. No log.
+</p>
 
-`wsc` asks a local SearXNG first, falls back to scrapers and structured APIs, and prints text sized for a
-terminal instead of raw HTML. The standard library is the whole stack; the only system binaries are the
-ones you choose to install for rendering and document extraction.
+<p align="center">
+  <a href="https://pypi.org/project/webscour/"><img src="https://img.shields.io/pypi/v/webscour?color=black" alt="PyPI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-black" alt="MIT"></a>
+  <img src="https://img.shields.io/badge/python-3.11%2B-black" alt="Python 3.11+">
+  <img src="https://img.shields.io/badge/platform-linux-black" alt="Linux">
+  <img src="https://img.shields.io/badge/dependencies-none-black" alt="No dependencies">
+</p>
+
+`wsc` (the command webscour installs) asks a local SearXNG first, falls back to scrapers and
+structured APIs, and prints text sized for a terminal instead of raw HTML. The standard library is the
+whole stack; the only system binaries are the ones you choose to install for rendering and documents.
 
 ## Install
 
@@ -13,6 +26,31 @@ pipx install webscour          # recommended: isolated, on PATH as `wsc`
 uvx webscour search "pyproject vs setup.py"   # no install at all
 uv tool install webscour
 pip install --user webscour
+```
+
+Or, on Linux, the installer that also sets up the search backend:
+
+```bash
+curl -LsSf https://wsc.ashina.live/install.sh | sh
+wsc setup                      # installs SearXNG as a systemd user unit
+wsc doctor                     # one line: OK, DEGRADED or DOWN
+```
+
+### Install with an agent
+
+Paste this into Claude Code, pi, dsh, or any agent that can run a shell:
+
+```text
+Install webscour, a keyless web CLI. Run:
+  curl -LsSf https://wsc.ashina.live/install.sh | sh
+Then run `wsc doctor`. A good report says lightpanda present and the SearXNG unit active, with
+one VERDICT line ending in OK. If the installer is unavailable, fall back in this order:
+`uv tool install webscour`, then `pipx install webscour`, then `python3 -m pip install --user
+webscour` (skip the last one on Debian or Ubuntu if it refuses with externally-managed-environment).
+
+Ask the user before running `wsc setup`, because it installs a systemd user unit on their machine.
+Use exactly one install method. The skill file, if your agent supports skills, is at
+https://raw.githubusercontent.com/FurBlood344324/webscour/main/skill/SKILL.md
 ```
 
 From a checkout, the same thing without a build step:
