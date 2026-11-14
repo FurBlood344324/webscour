@@ -82,9 +82,14 @@ summary() {
 # dependencies of the package, and requiring them in the system interpreter would make the gate
 # un-runnable on a machine that keeps its package manager clean.
 find_module() { # module-name
+  # Run the probe from a directory outside the repo. A stale ./build or ./dist in the repo root is
+  # a namespace package in the current working directory, so `python -m build` finds that empty
+  # directory instead of the tool and fails with "No module named build.__main__". That made the
+  # gate fail on a laptop with a previous build left behind and on a clean CI runner for a
+  # different reason, so the probe runs where the repository cannot shadow the name.
   local candidate
   for candidate in "$ROOT/.venv-dev/bin/python" "$PY"; do
-    if [ -x "$candidate" ] && "$candidate" -m "$1" --version >/dev/null 2>&1; then
+    if [ -x "$candidate" ] && ( cd / && "$candidate" -m "$1" --version >/dev/null 2>&1 ); then
       printf '%s' "$candidate"
       return 0
     fi
