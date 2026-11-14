@@ -117,11 +117,12 @@ note. A missing lightpanda is a failure.
 The repo is also a pi package and a Claude Code marketplace.
 
 ```bash
-pi install git:github.com/FurBlood344324/webscour    # adds skill/SKILL.md as a skill
+pi install npm:webscour    # adds skill/SKILL.md as a skill, no path to remember
 ```
 
-`package.json` at the repo root declares the skill, because a git source is cloned whole and pi has no
-subdirectory syntax; `pi/package.json` declares the same skill when `pi/` is the source instead.
+The npm package is the skill and a small `wsc` shim; the tool itself is Python and is installed
+separately (`pipx install webscour`). `package.json` at the repo root declares the skill, so a git
+source works too; `pi/package.json` declares the same skill when `pi/` is the source.
 
 Claude Code, one step (2.1.275 or later):
 

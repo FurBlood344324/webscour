@@ -1,48 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 64" width="260" height="64" role="img" aria-label="webscour">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 140" width="800" height="140" role="img" aria-label="webscour">
   <title>webscour</title>
-  <!-- The mark on the left, a grid scraped along one diagonal, with the name set beside it. The
-       name is drawn as paths, not as a font: no font-family, no embedded face, so the file renders
-       identically wherever it is opened. -->
-  <g fill="#1f2328">
-    <rect x="0" y="16" width="10" height="10"/>
-    <rect x="0" y="30" width="10" height="10"/>
-    <rect x="0" y="44" width="10" height="10"/>
-    <rect x="14" y="2" width="10" height="10"/>
-    <rect x="14" y="30" width="10" height="10"/>
-    <rect x="14" y="44" width="10" height="10"/>
-    <rect x="28" y="2" width="10" height="10"/>
-    <rect x="28" y="16" width="10" height="10"/>
-    <rect x="28" y="44" width="10" height="10"/>
-    <rect x="42" y="2" width="10" height="10"/>
-    <rect x="42" y="16" width="10" height="10"/>
-    <rect x="42" y="30" width="10" height="10"/>
-  </g>
-  <g stroke="#1f2328" stroke-width="3" stroke-linecap="butt" fill="none">
-    <path d="M0 11 L11 0"/>
-    <path d="M14 25 L25 14"/>
-    <path d="M28 39 L39 28"/>
-    <path d="M42 53 L53 42"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" stroke-linejoin="miter" transform="translate(66 32)">
-    <path d="M0 -20 L5.6 8 L10.4 -10 L15.2 8 L20.8 -20"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(94 32)">
-    <path d="M0 8 V-12 H9.4 C16 3 16 3 9.4 8 Z" stroke-linejoin="miter"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(120 32)">
-    <circle cx="6" cy="0" r="8.5"/>
-    <path d="M6 8.5 V18"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(146 32)">
-    <path d="M10 -18 L3 -18 C-1 -18 -3 -15 -3 -11 C-3 -7 -1 -5 3 -5 L7 -5 C11 -5 13 -3 13 1 C13 5 11 8 7 8 L0 8"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(172 32)">
-    <path d="M10 -14 C10 -18 6 -19 2 -19 C-3 -19 -7 -16 -7 -12 C-7 -8 -3 -6 2 -6 C7 -6 11 -4 11 0 C11 5 6 8 1 8 C-4 8 -8 5 -9 1"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(196 32)">
-    <circle cx="0" cy="0" r="9"/>
-  </g>
-  <g fill="none" stroke="#1f2328" stroke-width="5.5" stroke-linecap="butt" transform="translate(216 32)">
-    <path d="M0 -18 V0 H14"/>
+  <g transform="translate(117.06 111.36) scale(0.94)" fill="none" stroke="#1f2328" stroke-width="12" stroke-linecap="butt" stroke-linejoin="miter">
+    <path d="M0 -60 L15 0 L28 -34 L41 0 L56 -60"/>
+    <path d="M78 -30 H138 C138 -44.5 128.07 -56.6 113.85 -59.42 C99.63 -62.25 85.83 -54.87 80.28 -41.48 C74.74 -28.09 79.28 -13.11 91.33 -5.06 C103.39 3 118.96 1.46 129.21 -8.79"/>
+    <path d="M160 -88 V0 M160 -60 H186 C202.57 -60 216 -46.57 216 -30 C216 -13.43 202.57 0 186 0 H160"/>
+    <path d="M280.99 -52.5 C277.31 -58.88 269.79 -61.61 262.87 -59.1 C255.95 -56.58 251.95 -49.65 253.23 -42.4 C254.51 -35.14 260.64 -30 268 -30 C275.36 -30 281.49 -24.86 282.77 -17.6 C284.05 -10.35 280.05 -3.42 273.13 -0.9 C266.21 1.61 258.69 -1.12 255.01 -7.5"/>
+    <path d="M370.07 -52.29 C358.03 -63.13 339.67 -62.49 328.42 -50.84 C317.17 -39.19 317.17 -20.81 328.42 -9.16 C339.67 2.49 358.03 3.13 370.07 -7.71"/>
+    <path d="M432 -60 C448.57 -60 462 -46.57 462 -30 C462 -13.43 448.57 0 432 0 C415.43 0 402 -13.43 402 -30 C402 -46.57 415.43 -60 432 -60"/>
+    <path d="M484 -60 V-30 A30 30 0 0 0 540 -30 V-60"/>
+    <path d="M562 0 V-60 H572 C588.57 -60 602 -46.57 602 -30"/>
   </g>
 </svg>

@@ -6,7 +6,7 @@ discovers it changes, so the skill is written once and installed wherever the ag
 
 | Harness | Install | Notes |
 |---|---|---|
-| pi | `pi install /path/to/webscour` (uses `pi.` in `package.json`), or copy this directory to `~/.pi/agent/skills/webscour/`, or a project's `.pi/skills/webscour/` | `pi install` reads `pi.skills` from the package |
+| pi | `pi install npm:webscour` (the shortest form), or `pi install git:github.com/FurBlood344324/webscour`, or copy this directory to `~/.pi/agent/skills/webscour/` | `pi install` reads `pi.skills` from the package manifest |
 | Claude Code | `claude plugin marketplace add /path/to/webscour` then `claude plugin install webscour`, or copy to `~/.claude/skills/webscour/` | the repo ships `.claude-plugin/marketplace.json` pointing at this directory |
 | dsh | copy or symlink to `~/.agents/skills/webscour/` (shared across harnesses) or a project's `.dsh/skills/webscour/` | symlinks are what this machine uses |
 | agy | copy or symlink to `~/.gemini/config/skills/webscour/` | same frontmatter, no manifest |

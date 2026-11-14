@@ -120,6 +120,20 @@ brew install lightpanda-io/browser/lightpanda                                # H
 `docs/install.md` has the full installer page, including the uninstall and the troubleshooting
 checklist.
 
+## 1b. Install the agent skill, if your agent reads one
+
+The skill is what tells a model when to reach for `wsc` and which source to pick. It installs
+separately from the tool, because a skill is read by the agent and the CLI is run by the shell:
+
+```bash
+pi install npm:webscour                       # pi, shortest form
+npx skills add webscour                       # the open skills CLI
+claude plugin marketplace add FurBlood344324/webscour   # Claude Code, then /plugin install webscour
+```
+
+With none of those, hand the agent the raw file:
+`https://raw.githubusercontent.com/FurBlood344324/webscour/main/skill/SKILL.md`.
+
 ## 2. Install the search backend
 
 ```bash
