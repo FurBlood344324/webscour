@@ -137,6 +137,15 @@ if [ -z "$BUILD_PY" ] || [ -z "$TWINE_PY" ]; then
   summary
   exit 1
 fi
+# The build runs with --no-isolation, so the backend named in pyproject.toml has to be present in
+# the running environment. Python 3.12 and later do not ship setuptools in a fresh venv, and the
+# failure it produces ("Backend 'setuptools.build_meta' is not available") names neither the
+# interpreter nor the fix, so the gate checks for it first and says what to install.
+if ! "$BUILD_PY" -c 'import setuptools, sys; sys.exit(0 if int(setuptools.__version__.split(".")[0]) >= 77 else 1)' >/dev/null 2>&1; then
+  report build-deps 1 "setuptools>=77 is missing from $("$BUILD_PY" -c 'import sys;print(sys.executable)'); pip install 'setuptools>=77'"
+  summary
+  exit 1
+fi
 rm -rf dist build
 run_check build "$BUILD_PY" -m build --wheel --sdist -o dist --no-isolation
 run_check twine "$TWINE_PY" -m twine check dist/*
