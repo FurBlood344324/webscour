@@ -4,6 +4,21 @@
 
 Newest first. Notes no commit message can carry go here.
 
+## 0.1.3 - 2026-11-15
+
+The npm publish failed on 0.1.2 with a message no human should have needed to read: the workflow
+asked for credentials that it deliberately does not have.
+
+### Fixed
+
+- The npm job now authenticates through OIDC trusted publishing: `id-token: write`, no
+  `NODE_AUTH_TOKEN`, and `npm@11.5.1` installed first because the client bundled with Node 22
+  predates trusted publishing and falls back to looking for a token. The trusted publisher was
+  configured correctly on the package the whole time; the client was too old to use it.
+- The tag for 0.1.2 pointed at a commit from before that fix, so re-running the workflow re-ran the
+  old file. That is why 0.1.3 exists instead of a re-run: a workflow run executes the file as it
+  was when the run was created, not as it is now.
+
 ## 0.1.2 - 2026-11-15
 
 The project home page was showing the CI notes and the logo was a picture of the word "webscour"
