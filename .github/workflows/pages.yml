@@ -59,7 +59,7 @@ jobs:
       # Pinned majors, the same shape as ci.yml: checkout 5, configure-pages 6 (node24),
       # upload-pages-artifact 4, deploy-pages 5 (node24). The artifact contract between the
       # last two is "an artifact named github-pages holding one gzipped tar", which both keep.
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       - uses: actions/configure-pages@v6
 
@@ -91,7 +91,7 @@ jobs:
           # and the served copy cannot be validated by two different opinions.
           ./scripts/check-marketplace.sh _site/marketplace.json
 
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
