@@ -4,26 +4,17 @@
 
 Newest first. Notes no commit message can carry go here.
 
-### Fixed
-
-- The `pages` guard rejected every `git-subdir` source: it stringified the source object and asked
-  whether that text was a directory. The rule now lives in `scripts/check-marketplace.sh`, which
-  reads a string source as a path and an object source by its `path` key, and `check.sh` runs the
-  same script on the source file, so the gate and the deploy cannot disagree about what valid is.
-
 ## 0.1.3 - 2026-11-15
 
 The npm publish failed on 0.1.2 with a message no human should have needed to read: the workflow
-asked for credentials that it deliberately does not have.
+asked for credentials that it deliberately does not have. This release is that fix, and the two
+things it was waiting behind.
 
 ### Changed
 
 - The README opens with the drawing and the name as text, not with a picture of the word. A
   wordmark drawn as paths has to be redrawn whenever the name changes, and a README already says
   the name one line below the picture. The mark files are the whole identity now.
-
-### Changed
-
 - The Claude Code marketplace is served from `https://wsc.ashina.live/marketplace.json`, the same
   domain as the installer, so the install line carries no account name. The plugin source is
   `git-subdir` (the documented type for a plugin in a repository subdirectory), which mounts
@@ -33,6 +24,8 @@ asked for credentials that it deliberately does not have.
 
 - A Claude Code section for the MCP server (`claude mcp add webscour -- wsc mcp`), which existed in
   `mcp/README.md` and in the verb table but was missing from the page a user reads first.
+- A `marketplace` line in the gate: `scripts/check-marketplace.sh` reads the marketplace file the
+  same way Claude Code does, so a source that would fail at `claude plugin install` fails here.
 
 ### Fixed
 
@@ -43,6 +36,10 @@ asked for credentials that it deliberately does not have.
 - The tag for 0.1.2 pointed at a commit from before that fix, so re-running the workflow re-ran the
   old file. That is why 0.1.3 exists instead of a re-run: a workflow run executes the file as it
   was when the run was created, not as it is now.
+- The first version of the `pages` guard rejected every `git-subdir` source: it stringified the
+  source object and asked whether that text was a directory, which is false for every plugin, so
+  the deploy stopped before uploading and the marketplace URL answered 404 while `install.sh` kept
+  serving. The rule now reads a string source as a path and an object source by its `path` key.
 
 ## 0.1.2 - 2026-11-15
 
