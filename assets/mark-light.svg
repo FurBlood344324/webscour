@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="webscour">
+  <title>webscour</title>
+  <g fill="#1f2328">
+    <rect x="1" y="1" width="13" height="13"/>
+    <rect x="18" y="1" width="13" height="13"/>
+    <rect x="1" y="18" width="13" height="13"/>
+  </g>
+  <path d="M18.9 30.9 L30.9 18.9" fill="none" stroke="#1f2328" stroke-width="5.2"/>
+</svg>
