@@ -1,9 +1,10 @@
-# A wrapper, like ci.yml: the version check, the changelog read and the publish decisions live in
-# scripts/, so a laptop can rehearse the same steps. Nothing here decides what "correct" means.
+# A wrapper, like ci.yml: the version check and the publish decisions live in scripts/, so a laptop
+# can rehearse the same steps. Nothing here decides what "correct" means.
 #
-# npm publishing uses a granular token in the `NPM_TOKEN` secret. PyPI does not need one (OIDC), but
-# npm has no equivalent OIDC trust for a personal account, so this is the one secret the project
-# holds. It is scoped to a single package and can be rotated without touching anything else.
+# npm publishing uses OIDC trusted publishing, the same shape PyPI uses: the package trusts this
+# repository and this workflow file, GitHub mints a short-lived token, and no secret is stored. That
+# is why `id-token: write` is granted and why no NODE_AUTH_TOKEN appears below. A token in a secret
+# would be a second copy of the permission, and the copy is the one that goes stale.
 name: npm
 
 on:
@@ -12,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write   # OIDC to npm: no token secret anywhere
 
 jobs:
   publish:
@@ -24,6 +26,14 @@ jobs:
         with:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
+
+      # Trusted publishing needs npm 11.5.1 or later; the one bundled with Node 22 is older, and
+      # the older client falls back to looking for a token, which is exactly the failure this
+      # workflow exists to avoid.
+      - name: npm new enough for OIDC
+        run: |
+          npm install -g npm@^11.5.1
+          npm --version
 
       # The same rule as the PyPI release: the tag is the promise, and the package is the copy.
       # A tag that disagrees with package.json publishes nothing.
@@ -57,10 +67,8 @@ jobs:
           '
 
       - name: publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # --provenance ties the tarball to this workflow run; --access public because the package
-          # name is unscoped. A version that is already published fails loudly rather than silently
-          # skipping, so a mistaken tag is visible.
+          # --provenance ties the tarball to this workflow run. Authentication comes from the OIDC
+          # exchange: with no NODE_AUTH_TOKEN set, npm asks GitHub for an identity token and the
+          # registry checks it against the trusted publisher configured for this package.
           npm publish --provenance --access public
