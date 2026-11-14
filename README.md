@@ -1,15 +1,18 @@
 <p align="center">
-  <img src="assets/logo.svg" alt="webscour" width="460">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/logo-dark.svg">
+    <img src="assets/logo-light.svg" alt="webscour" width="460">
+  </picture>
 </p>
 
 <p align="center">
-  <b>webscour</b> is one keyless CLI for the web: search, page text, PDFs, sitemaps and a polite crawl.<br>
-  No API key. No account. No log.
+  <b>A keyless web CLI for agents.</b><br>
+  Search, page text, PDFs, sitemaps and a polite crawl. No API key. No account. No log.
 </p>
 
 <p align="center">
   <a href="https://pypi.org/project/webscour/"><img src="https://img.shields.io/pypi/v/webscour?color=black" alt="PyPI"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-black" alt="MIT"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-black" alt="MIT"></a>
   <img src="https://img.shields.io/badge/python-3.11%2B-black" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/platform-linux-black" alt="Linux">
   <img src="https://img.shields.io/badge/dependencies-none-black" alt="No dependencies">

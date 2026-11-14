@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 140" width="800" height="140" role="img" aria-label="webscour">
   <title>webscour</title>
-  <g transform="translate(117.06 111.36) scale(0.94)" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="butt" stroke-linejoin="miter">
+  <g transform="translate(117.06 111.36) scale(0.94)" fill="none" stroke="#1f2328" stroke-width="12" stroke-linecap="butt" stroke-linejoin="miter">
     <path d="M0 -60 L15 0 L28 -34 L41 0 L56 -60"/>
     <path d="M78 -30 H138 C138 -44.5 128.07 -56.6 113.85 -59.42 C99.63 -62.25 85.83 -54.87 80.28 -41.48 C74.74 -28.09 79.28 -13.11 91.33 -5.06 C103.39 3 118.96 1.46 129.21 -8.79"/>
     <path d="M160 -88 V0 M160 -60 H186 C202.57 -60 216 -46.57 216 -30 C216 -13.43 202.57 0 186 0 H160"/>
