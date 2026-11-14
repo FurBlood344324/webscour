@@ -1,0 +1,77 @@
+# webscour
+
+> `webscour` (`wsc`) is a Linux-first, dependency-free Python CLI that fetches the web for agents:
+> keyless search through a local SearXNG, page text and markdown, PDF reading, sitemap mapping and
+> a polite short crawl. No key. No account. No log.
+
+Everything an agent needs is on this page. The full documentation is one link away at the end.
+
+## What it does
+
+- `wsc search "<query>"` asks a local SearXNG first, falls back to scrapers, and prints numbered
+  rows with the engines that produced each one.
+- `wsc fetch <url>` turns one page into reading text or markdown, with an optional regex filter.
+- `wsc pdf <url|path>` reads a paper or a manual through pdftotext, pandoc or markitdown.
+- `wsc map <url>` lists a site's URLs from sitemap.xml, robots.txt or llms.txt.
+- `wsc crawl <url>` follows same-origin links for a few pages, one per second.
+- `wsc doctor` reports one verdict line for the whole install and exits 1 when it is not `OK`.
+- `wsc setup` installs the bundled SearXNG as a systemd user unit on 127.0.0.1:8888.
+- `wsc probe` measures which upstream engines your IP can actually use.
+- `wsc cache list|get|prune|path` reads the on-disk cache under `./.webscour/`.
+
+## Install
+
+```bash
+pipx install webscour                  # recommended
+uv tool install webscour
+pip install --user webscour
+uvx webscour search "sqlite wal mode"  # no install at all
+wsc setup                              # the local SearXNG and the lightpanda check
+```
+
+Python 3.11 or newer, Linux, and lightpanda on `PATH` for rendering. No Python dependencies exist
+by design.
+
+## Sources
+
+`--source web` (default) is the local meta-search. `github`, `so`, `hn`, `arxiv` and
+`discourse:<base>` are direct service APIs. Fourteen more are keyless single-purpose endpoints:
+`wikipedia`, `openalex`, `crossref`, `arxiv-api`, `europepmc`, `pubmed`, `pypi`, `npm`, `crates`,
+`devto`, `wayback`, `googlenews`, `bbc`. None needs a key. `--fresh` restricts the answer to dated
+news rows.
+
+## Rules the tool keeps
+
+- stdout is the answer; stderr carries failures and three facts about an answer: `render: <engine>`,
+  `route: <name>`, `cache: hit (<age>)`.
+- `-v` explains every choice. Without it, a clean run is silent.
+- At most one live web query per second, across processes, so a shell loop cannot look like a
+  scraper.
+- Exit codes: `0` success, `1` a failed verdict or gate, `2` a usage error or a backend that could
+  not answer.
+
+## The full documentation
+
+- [index.md](docs/index.md): what webscour is and where each page fits.
+- [quickstart.md](docs/quickstart.md): install, `wsc setup`, three real commands, what `wsc doctor`
+  reports.
+- [verbs.md](docs/verbs.md): every verb, every flag with its default and type, exit codes.
+- [sources.md](docs/sources.md): the `--source` table and how to choose one.
+- [privacy.md](docs/privacy.md): what leaves the machine, what never does, how to verify it.
+- [self-hosting.md](docs/self-hosting.md): what `wsc setup` writes, another port, a remote
+  instance, clean removal.
+- [contributing.md](docs/contributing.md): module layout, tests, the benchmark, commits.
+- [llms-full.txt](llms-full.txt): all seven pages concatenated, in reading order.
+
+## Interfaces
+
+- CLI: `wsc <verb>`, documented above.
+- MCP server: `wsc mcp`, a stdio JSON-RPC server exposing one tool, `web_scour`.
+- pi extension: `extensions/pi/`, which shells out to `wsc tool-argv` and runs the command it gets
+  back.
+- `wsc tool-argv --json '<params>'` prints the command line both front ends build, so the mapping
+  is inspectable.
+
+## Licence
+
+MIT. The licence text is [LICENSE](LICENSE).

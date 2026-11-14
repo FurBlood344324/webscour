@@ -1,0 +1,1315 @@
+# webscour, full documentation
+
+The seven documentation pages concatenated in reading order, for an agent that reads one file
+instead of seven. Each section is preceded by the path of the page it came from. `llms.txt` is the
+short entry point; this file is the bulk read.
+
+Regenerate from the repository root. The header ends at the `<!-- pages -->` marker, and the loop
+below rebuilds everything after it, so a rerun reproduces this file exactly:
+
+```bash
+sed -n '1,/^<!-- pages -->$/p' llms-full.txt > /tmp/lf
+for p in index quickstart verbs sources privacy self-hosting contributing; do
+  printf '\n---\n\n# docs/%s.md\n\n' "$p" >> /tmp/lf
+  cat "docs/$p.md" >> /tmp/lf
+done
+mv /tmp/lf llms-full.txt
+```
+
+<!-- pages -->
+
+---
+
+# docs/index.md
+
+# webscour
+
+`webscour` is a Linux-first, dependency-free Python CLI that fetches the web for agents. The
+executable is `wsc`. It searches the web through a local SearXNG first and falls back to
+scrapers, queries GitHub, Stack Overflow, Hacker News, arXiv, Discourse and fourteen keyless API
+endpoints directly, fetches a page as text or markdown, reads a PDF, maps a site from its
+sitemap, and crawls a few pages politely. It renders with lightpanda, and playwright is the
+fallback for a page that defeats lightpanda. It installs no Python package, needs no key and
+opens no account.
+
+It is not fast, and it does not claim to be. It is local, keyless, logless and terminal first:
+one executable, text on stdout, failures on stderr, and an answer sized for an agent's context
+instead of a browser tab.
+
+**No key. No account. No log.**
+
+```bash
+wsc search "sqlite wal mode concurrent readers" --limit 5
+wsc fetch https://example.com --max-chars 2000
+wsc doctor
+```
+
+## Three ways in
+
+The CLI is the source of truth. Two front ends call it rather than reimplementing it, and both
+route their arguments through one mapping in `webscour/argv.py`, so a flag is added once and all
+three stay in step.
+
+| front end | how you reach it | what it is |
+|---|---|---|
+| CLI | `wsc <verb>` | the tool itself, documented on these pages |
+| MCP server | `wsc mcp` | a stdio JSON-RPC server exposing one tool, `web_scour`, over the standard library only |
+| pi tool | `extensions/pi/` | a pi extension that shells out to `wsc tool-argv` and runs the command it gets back |
+
+`wsc tool-argv --json '{"action":"fetch","url":"https://example.com","max_chars":500}'` prints the
+exact command line the other two front ends would run, which is the cheapest way to see what the
+mapping does.
+
+## The documentation
+
+| page | read it for |
+|---|---|
+| [quickstart](quickstart.md) | install, run `wsc setup`, see real commands with their output, read what `wsc doctor` reports |
+| [verbs](verbs.md) | every verb, its exact flags with defaults and types, an example, and the exit codes |
+| [sources](sources.md) | the `--source` table, what each source queries, its rate limit, and how to choose one |
+| [privacy](privacy.md) | exactly what leaves the machine, what never does, and how to verify the logging claim |
+| [self-hosting](self-hosting.md) | what `wsc setup` writes, a different port, a remote SearXNG, clean removal |
+| [contributing](contributing.md) | the module layout, the test command, the benchmark, the commit convention |
+
+[routing.md](routing.md) is the cost and decision table for the source layer, [install.md](install.md)
+covers the installer and the uninstall, and [maintaining.md](maintaining.md) is the release runbook.
+The reasoning behind the five structural choices is in [decisions/](decisions/).
+
+## Requirements, in one line each
+
+Python 3.11 or newer. Linux, because `wsc setup` installs a systemd user unit. lightpanda on
+`PATH` is required for rendering; `pdftotext`, `pandoc` and `markitdown` are optional and only
+`wsc pdf` uses them. `wsc doctor` reports which of those it can see and ends in one verdict line.
+
+Licence: MIT.
+
+---
+
+# docs/quickstart.md
+
+# Quickstart
+
+You need Python 3.11 or newer and Linux. The render path needs lightpanda on `PATH`; everything
+else is optional.
+
+## 1. Install
+
+```bash
+pipx install webscour                        # recommended: isolated venv, `wsc` on PATH
+uvx webscour search "sqlite wal mode"        # no install at all, one run
+uv tool install webscour                     # uv's managed tool environment
+pip install --user webscour                  # plain pip, user prefix
+```
+
+From a checkout, with no build step:
+
+```bash
+cd webscour
+python3 -m webscour.cli search "sqlite wal mode"
+```
+
+None of those install a Python dependency, because there are none. lightpanda is a system binary
+and pip does not and should not manage it. Install it before you run anything that renders:
+
+```bash
+yay -S lightpanda-bin                                                        # Arch / AUR
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "<version>"        # any Linux
+brew install lightpanda-io/browser/lightpanda                                # Homebrew
+```
+
+`docs/install.md` has the full installer page, including the uninstall and the troubleshooting
+checklist.
+
+## 2. Install the search backend
+
+```bash
+wsc setup
+```
+
+That installs the bundled SearXNG: a shallow clone at a pinned commit, a venv, a generated
+settings file, and one systemd user unit bound to `127.0.0.1:8888`. It also verifies that
+lightpanda is on `PATH` and prints the install hint when it is not. The command is idempotent, so
+a second run reports `unchanged` and restarts nothing.
+
+`wsc setup` is a command you run, never a post-install hook. See [self-hosting](self-hosting.md)
+for the paths it writes and how to remove them.
+
+## 3. Check the machine
+
+```bash
+wsc doctor
+```
+
+`wsc doctor` reports in this order, and ends in one verdict line:
+
+- `unit` is `active` and `enabled at boot`, because the systemd user unit is running.
+- `listen` is `127.0.0.1:8888`, and nothing else. A non-loopback address is reported as
+  `NOT loopback only` and degrades the verdict.
+- `engines` is the number of engines the local instance loaded; `answered` is the subset that
+  returned a row for one live probe query; `blocked` is SearXNG's own error table. Some engines
+  are blocked from a residential IP, which is expected, not a fault.
+- `backends` names lightpanda, playwright, pdftotext, pandoc and markitdown with `ok` or `no`.
+- `render-venv` is either `absent` with the fix line, or the venv path with its health.
+- `sources` lists the keyless endpoints and whether each is configured. `--live` probes them, at
+  the cost of about a dozen requests, which is why it is not the default.
+
+The verdict is one of `VERDICT OK`, `VERDICT DEGRADED: <reason>` or `VERDICT DOWN`. `OK` exits 0;
+the other two exit 1, so a script can gate on it. Add `--json` for the same report as data.
+
+```text
+unit      active (enabled at boot)
+listen    127.0.0.1:8888
+engines   10 loaded
+blocked   abcnyheter, brave, quark, yacy
+answered  bing, mwmbl, naver, rawweb, seznam
+silent    abcnyheter, brave, quark, wikibooks, yacy
+backends  lightpanda=ok  playwright=no  pdftotext=ok  pandoc=ok  markitdown=ok
+          playwright: not installed (only needed for a page lightpanda cannot render)
+render-venv  absent (/home/<user>/.local/share/webscour/render-venv/bin/python)
+             fallback only: wsc setup --playwright
+sources   14 keyless endpoint(s)
+          wikipedia    configured
+          ...
+VERDICT OK (5/10 engines answering, 4 blocked)
+```
+
+A blocked count above half of the loaded engines is `DEGRADED`, not `OK`. That threshold is
+deliberate: a meta-search is expected to lose upstreams, a majority is not.
+
+## 4. Three real commands
+
+Search. Rows are numbered, the snippet is cut to 200 characters, and the bracket tag names the
+upstream engines that produced the row:
+
+```console
+$ wsc search "sqlite wal mode concurrent readers" --limit 3
+1. SQLite WAL Mode, and How LiteFS Replicates It · The Fly Blog - https://fly.io/blog/wal-mode-in-litefs/  [mwmbl,seznam]
+   WAL Mode in LiteFS LiteFS is a distributed file system that magically replicates your SQLite databases. Make an update on one server and, voilà, your cha…
+2. Introduce Sqlite WAL journal mode by lainedfles · Pull Request #… - https://github.com/evilsocket/opensnitch/pull/1011  [mwmbl]
+   Saved searches Use saved searches to filter your results more quickly You signed in with another tab or window. Reload to refresh your session.You signed…
+3. Write-Ahead Logging - https://www.sqlite.org/wal.html  [seznam]
+   By default, SQLite does a checkpoint automatically when the WAL file reaches a threshold size of 1000 pages. (The Sqlite_Default_WAL_Autocheckpoint compile-time option can be used to specify a differ…
+```
+
+Fetch. Plain HTTP, no browser, and a cut marker when the text is longer than `--max-chars`:
+
+```console
+$ wsc fetch https://example.com --max-chars 120 --no-cache
+This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it
+... (cut at 120 chars)
+```
+
+Map. One URL per line, from the site's sitemap, a `Sitemap:` line in robots.txt, or llms.txt:
+
+```console
+$ wsc map https://docs.python.org --limit 4
+https://docs.python.org/3.11/
+https://docs.python.org/3.12/
+https://docs.python.org/3.13/
+https://docs.python.org/3.14/
+```
+
+Each of those writes its answer to stdout. When a render was unavoidable, stderr carries exactly
+one extra line, `render: lightpanda` or `render: playwright`; a cache hit and a structured route
+announce themselves the same way. Add `-v` to see why the tool chose what it chose.
+
+## 5. If you are an agent
+
+Two more entry points reach the same code without a shell in between:
+
+```bash
+wsc mcp         # a stdio JSON-RPC server with one tool, web_scour
+wsc tool-argv --json '{"action":"fetch","url":"https://example.com"}'
+```
+
+The second prints the command line the MCP server and the pi extension both build, so what a
+front end runs is inspectable. `--source web` is the default for all of them.
+
+## 6. Where to go next
+
+- [verbs](verbs.md) for every flag, its default and its type.
+- [sources](sources.md) to query GitHub, Stack Overflow, Hacker News, arXiv, a Discourse forum or
+  one of the keyless paper and package endpoints instead of the general web.
+- [privacy](privacy.md) for what leaves the machine.
+
+---
+
+# docs/verbs.md
+
+# Verbs
+
+`wsc` has eleven verbs and one self-test. This page gives each its purpose, its exact flags with
+defaults and types, one example, and its exit codes. Every flag below is read from the parser in
+`webscour/cli.py`.
+
+Before the verbs, the two rules that apply to all of them.
+
+**stdout is the answer.** Search rows, page text, URL lists, crawl lines and the doctor table all
+go to stdout. You can redirect stdout to a file and still have a usable page.
+
+**stderr is silent by default.** It carries only what you need when the exit code is not 0, plus
+three exceptions, which are facts about the answer rather than explanations: `render: <engine>`
+when a browser produced the text, `cache: hit (<age>)` when the text came from the on-disk cache
+instead of the network, and `route: <name>` when a site's own API answered. `-v` (or `--verbose`)
+turns on the reasoning: which backend answered, why a page looked hollow, how long the pace slept,
+which sitemap answered, which backend read a document. `search`, `setup`, `probe`, `cache` and
+`pdf` take no `-v`; `fetch`, `map`, `crawl` and `doctor` do.
+
+Exit codes in general: `0` success, `1` a verdict or a gate failed, `2` a usage error or a
+backend that could not answer. argparse exits 2 on a missing positional, an unknown flag or an
+invalid choice.
+
+## search
+
+One query, one page of results. `--source` selects the backend; `web` asks the local SearXNG
+first and falls back to the DuckDuckGo lite page, the DuckDuckGo html page and Bing, in that
+order. Rows print as `N. title - url  [engine,engine]` with the snippet indented below and cut to
+200 characters.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `query` | positional, required | none | the search terms |
+| `--source` | string | `web` | `web`, `github`, `so`, `hn`, `arxiv`, `discourse:<base>`, or a keyless API source |
+| `--limit` | int | `8` | rows wanted; clamped to the range 1 to 30 |
+| `--category` | choice | empty | a SearXNG category: `general`, `it`, `science`, `news`, `images`, `files`, `social`. Opt-in because a category changes which engines answer, so it changes the answer |
+| `--fresh` | flag | off | the freshness rows only (Google News, BBC), sorted by publication date, newest first |
+| `--since` | string, `YYYY-MM-DD` | empty | a date floor for `--fresh` |
+| `--json` | flag | off | print an array of objects: `title`, `url`, `snippet`, `engines` |
+
+`--source` also accepts the keyless endpoints `wikipedia`, `openalex`, `crossref`, `arxiv-api`,
+`europepmc`, `pubmed`, `pypi`, `npm`, `crates`, `devto`, `wayback`, `googlenews` and `bbc`. See
+[sources](sources.md).
+
+```console
+$ wsc search "sqlite wal mode concurrent readers" --limit 2
+1. SQLite WAL Mode, and How LiteFS Replicates It · The Fly Blog - https://fly.io/blog/wal-mode-in-litefs/  [mwmbl,seznam]
+   WAL Mode in LiteFS LiteFS is a distributed file system that magically replicates your SQLite databases. Make an update on one server and, voilà, your cha…
+2. SQLite Forum: How does SQLite maintains state? - https://sqlite.org/forum/forumpost/f007a66e693f3c24?raw  [mwmbl]
+   I was going through SQLite WAL mode and found the below statement in the docs >**3.1. Automatic Checkpoint** >By default, SQLite will automatically checkp…
+```
+
+With `--source github` the command makes two unauthenticated calls, repositories then issues, and
+prints one extra stdout line at the end: `-- github rate limit remaining: <n>`.
+
+Exit codes: `0` at least one row printed. `2` for an unknown `--source`, for zero results, and for
+a usage error. A failed backend prints `backend <name>: <reason>` on stderr and the command moves
+on to the next one; it exits 2 only when every backend failed or returned nothing.
+
+## fetch
+
+One URL as reading text. Plain HTTP by default: one request, HTML tokenized, navigation and
+boilerplate dropped, blank lines removed. A page that is a JavaScript shell is retried once
+through a render engine, and that retry is what prints `render: <engine>`.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `url` | positional, required | none | `http://` or `https://` |
+| `--max-chars` | int | `6000` | cut the text here; a `... (cut at N chars)` line is appended |
+| `--grep` | string, a regex | none | keep only matching lines, with one line of context and `>` on the match |
+| `--format` | choice | `text` | `text` or `markdown`; markdown keeps headings, links and code fences |
+| `--render` | flag | off | force a browser; no silent fallback if none is usable |
+| `--render-engine` | choice | `auto` | `lightpanda`, `playwright` or `auto`, which tries lightpanda first |
+| `--archive` | flag | off | force the Wayback Machine snapshot; a live page that answers 404 or 410 already does this |
+| `--no-route` | flag | off | ignore the structured per-site routes and always take the plain path |
+| `--save` | flag | off | also write the page into `./.webscour/` |
+| `--save-only` | flag | off | write it and print one index line instead of the page |
+| `--fresh` | flag | off | ignore the cache for this call; the network is read |
+| `--ttl` | string duration | empty (24h) | cache freshness window, for example `30m` or `7d` |
+| `--no-cache` | flag | off | neither read nor write the cache |
+| `--max-size` | int | `5242880` | the largest page, in bytes, that `--save` will write |
+| `-v`, `--verbose` | flag | off | explain every choice on stderr |
+
+```console
+$ wsc fetch https://example.com --max-chars 120 --no-cache
+This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it
+... (cut at 120 chars)
+```
+
+```console
+$ wsc fetch https://example.com --grep "documentation" --no-cache
+> This domain is for use in documentation examples without needing permission. This is not a service; avoid relying on it for testing and monitoring purposes.
+```
+
+A PDF or docx URL is routed through the same local extractors `pdf` uses. A forum topic URL on
+`forums.developer.nvidia.com` is read through its `.json` form, which needs no render.
+
+Exit codes: `0` text printed. `1` `--grep` was given and no line matched; the text was not
+printed. `2` the fetch failed (HTTP error, DNS failure, empty document), the text was empty, or
+`--grep` was not a valid regex. `--render` with no usable engine exits 2 and names every engine it
+tried.
+
+## pdf
+
+A paper or a manual as text, from a URL or a local file. The first working local backend reads it:
+`pdftotext` then `markitdown` for a PDF, `pandoc` then `markitdown` for docx and epub. Nothing is
+uploaded and no service is involved.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `source` | positional, required | none | an `http(s)` URL or a path on disk |
+| `--max-chars` | int | `20000` | cut the text here, with the same cut marker as `fetch` |
+| `--format` | choice | `text` | `text` or `markdown`; only pandoc can produce markdown, so a PDF stays plain either way |
+| `-v`, `--verbose` | flag | off | name the format and the backend that produced the text |
+
+```console
+$ wsc pdf https://arxiv.org/pdf/1706.03762 --max-chars 200
+                                            Provided proper attribution is provided, Google hereby grants permission to
+                                            reproduce the tables and figures in
+… (cut at 200 chars)
+```
+
+Exit codes: `0` text printed. `2` the path does not exist, the URL is not a document, no backend
+could read the format, or the document has no text layer (a scan). The last case says so on
+stderr and stops; OCR is out of scope.
+
+## map
+
+The URL list for a site. It asks four candidate documents in order, the cheapest first:
+`/sitemap.xml`, `/sitemap_index.xml`, the `Sitemap:` line in `/robots.txt`, then `/llms.txt`. It
+prints the first one that answers.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `url` | positional, required | none | any URL on the site; only scheme and host are used |
+| `--limit` | int | `200` | stop after this many URLs; below 1 is raised to 1 |
+| `-v`, `--verbose` | flag | off | name the document that answered and how many URLs were withheld |
+
+```console
+$ wsc map https://docs.python.org --limit 4
+https://docs.python.org/3.11/
+https://docs.python.org/3.12/
+https://docs.python.org/3.13/
+https://docs.python.org/3.14/
+```
+
+Exit codes: `0` at least one URL printed. `2` none of the four candidates answered, with
+`map: no sitemap, robots Sitemap line or llms.txt answered at <origin>` on stderr.
+
+## crawl
+
+A short polite crawl. It seeds from `map`, then follows same-origin links breadth first, and
+prints one line per page: `url  |  title  |  N chars`. It writes nothing to disk.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `url` | positional, required | none | the seed URL |
+| `--depth` | int | `1` | link depth; below 0 is raised to 0, and 0 fetches the seed only |
+| `--limit` | int | `20` | maximum pages fetched; clamped to the range 1 to 200 |
+| `--same-origin` | flag | on | stay on the seed origin; this is the default |
+| `--any-origin` | flag | off | leave the origin; mutually exclusive with `--same-origin` |
+| `-v`, `--verbose` | flag | off | report the page count, the depth, the origin rule and the pacing |
+
+```console
+$ wsc crawl https://example.com --limit 3
+https://example.com  |  Example Domain  |  156 chars
+```
+
+Every request in a crawl waits so that two live fetches stay at least one second apart, and the
+stamp is shared across processes. A crawl of N pages therefore takes at least N seconds.
+
+Exit codes: `0` at least one page printed. `2` nothing was fetched.
+
+## cache
+
+Four verbs over the on-disk cache, which is `<cwd>/.webscour/`: one markdown file per fetched URL
+and an index beside them. Reading is on by default with a 24 hour window; writing only happens
+when `fetch` was given `--save`, `--save-only`, or when `cache get` misses.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `action` | positional, required | none | `list`, `get <url>`, `prune`, or `path` |
+| `url` | positional, optional | none | required by `get` |
+| `--older-than` | string duration | `7d` | the prune window |
+| `--all` | flag | off | `prune` only: remove the whole directory |
+| `--json` | flag | off | print the index as one JSON object |
+
+```console
+$ wsc cache list
+fetched                 bytes      age format     file
+2026-11-15 00:08:34       157       2s markdown   0f115db0-example-com.md
+1 entry, 157 bytes, /home/<user>/.webscour
+```
+
+`cache get <url>` returns the cached text, and on a miss it fetches the page, saves it and prints
+it. It ignores the TTL on purpose: asking for a specific URL means you want that file. `cache path`
+prints the directory. `cache prune` reports every file it removed and the bytes freed.
+
+Exit codes: `0` for `list`, `path`, a successful `prune`, and a `get` that answered. `2` for a
+`get` with no URL, a bad action (argparse), an unreadable index, or a `get` whose fetch failed.
+
+## doctor
+
+The health check. It reports the systemd user unit, the listener, the loaded engine count, which
+engines are blocked in SearXNG's own error table, which engines answered one live probe query,
+which engines are silent, the render and document backends, the render venv, the keyless sources,
+and one verdict line. It changes nothing.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `--json` | flag | off | print the same report as one JSON object after the table |
+| `--live` | flag | off | probe every keyless endpoint once; a dozen requests, so it is not the default |
+| `-v`, `--verbose` | flag | off | name which source failed and why, on stderr |
+
+```console
+$ wsc doctor
+unit      active (enabled at boot)
+listen    127.0.0.1:8888
+engines   10 loaded
+blocked   abcnyheter, brave, quark, yacy
+answered  bing, mwmbl, naver, rawweb, seznam
+silent    abcnyheter, brave, quark, wikibooks, yacy
+backends  lightpanda=ok  playwright=no  pdftotext=ok  pandoc=ok  markitdown=ok
+          playwright: not installed (only needed for a page lightpanda cannot render)
+render-venv  absent (/home/<user>/.local/share/webscour/render-venv/bin/python)
+             fallback only: wsc setup --playwright
+sources   14 keyless endpoint(s)
+          wikipedia    configured
+          ...
+VERDICT OK (5/10 engines answering, 4 blocked)
+```
+
+The verdict has three forms. `VERDICT DOWN` when nothing is listening or no engine answered.
+`VERDICT DEGRADED: <reason>` when lightpanda is missing, when the listener is not loopback only,
+or when more than half of the loaded engines are blocked. `VERDICT OK (<n>/<m> engines answering,
+<k> blocked)` otherwise.
+
+Exit codes: `0` for `OK`. `1` for `DOWN` and for `DEGRADED`. A script can gate on the exit code
+alone and read nothing.
+
+## setup
+
+The installer. Bare `wsc setup` means "install the local SearXNG"; the render fallback is a
+separate install and needs its own flag, because a search backend and a browser are two different
+capabilities. It is idempotent: a second run reports `unchanged` and restarts nothing.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `--searxng` | flag | off | install the local SearXNG user unit; bare `setup` does this too |
+| `--playwright` | flag | off | install the render fallback into `~/.local/share/webscour/render-venv` |
+| `--all` | flag | off | both installs in one run |
+| `--with-deps` | flag | off | let playwright install chromium's OS packages; needs root |
+| `--force` | flag | off | rebuild what is already there |
+| `--no-start` | flag | off | install without starting the unit |
+| `--check` | flag | off | report state and change nothing |
+
+```console
+$ wsc setup --check
+src            de722ab
+venv           present
+settings       1938
+state          present
+unit           enabled / active
+listen         127.0.0.1:8888
+lightpanda  /usr/bin/lightpanda
+```
+
+Exit codes: `0` everything asked for is in place. `1` lightpanda is not on `PATH` after a SearXNG
+install, or the playwright install failed; both print the exact fix. The SearXNG step returns the
+bundled installer's own exit code, which is `2` for an unknown option and `1` for a failed
+preflight.
+
+## probe
+
+The engine measurement. It asks the local SearXNG a fixed query set and reports, per engine, the
+success rate, the median latency, whether the page was a bot check and its category. `--quality`
+is the wider measurement that decides which engines are worth keeping.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `--engines` | string, comma separated | all candidates | measure only these engines |
+| `--quality` | flag | off | the 30-query coverage and precision measurement |
+| `--write` | flag | off | with `--quality`, write the survivors to the engine state file |
+| `--json` | flag | off | print the rows as JSON |
+
+```console
+$ wsc probe --engines naver,bing
+ 1/2 naver          100.0%  median 0.83s  blocked 0  general web
+ 2/2 bing            40.0%  median 0.18s  blocked 0  general web
+
+keep (>=70% success, no block, web category): naver
+```
+
+`--write` only stores a set the measurement kept: an empty result is refused and the settings are
+left untouched. The file it writes is not live until the installer renders it again, and the
+command prints that reminder.
+
+Exit codes: `0` the measurement ran. `1` the local SearXNG did not answer, or `--write` had an
+empty set to store. `2` an unknown option reached the bundled script.
+
+## mcp
+
+A stdio JSON-RPC server that exposes one tool, `web_scour`, over the standard library only. It is
+a front end, not a second implementation: it builds an argv with `webscour/argv.py` and runs the
+same commands you would type.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| none | | | it speaks JSON-RPC on stdin and stdout |
+
+```console
+$ wsc mcp
+```
+
+Exit codes: `0` the client closed the stream. `2` no server file was found, which happens in a
+wheel that does not ship one; the message names the three paths it looked in.
+
+## tool-argv
+
+The mapping itself, for a front end that is not Python. It takes one JSON object of tool
+parameters and prints the argv, the error if there was one, and the command line as you would
+type it.
+
+| flag | type | default | meaning |
+|---|---|---|---|
+| `--json` | string, JSON | none; stdin is read when absent | one tool call: `{"action": ..., "query" or "url": ..., ...}` |
+
+```console
+$ wsc tool-argv --json '{"action":"fetch","url":"https://example.com","max_chars":500}'
+{"argv": ["fetch", "https://example.com", "--max-chars", "500"], "error": "", "command": "wsc fetch https://example.com --max-chars 500"}
+```
+
+The action is one of `search`, `fetch`, `pdf`, `map` or `crawl`. `build` never raises: an
+unusable call comes back with a non-empty `error` and an empty `argv`, which is why a front end
+does not need a try/except to stay quiet.
+
+Exit codes: `0` a usable argv. `2` invalid JSON, or a call the mapping refused.
+
+## The entry points
+
+`wsc` is a console script that calls one function, `webscour.cli:main`. Four spellings reach that
+function and the same exit code.
+
+- `wsc <verb>` is the console script, installed by pipx, uv or pip.
+- `python3 -m webscour` and `python3 -m webscour.cli` run `main()` in process. Use these from a
+  checkout with no build step, and in a test that must not depend on `PATH`. The module entry
+  point also maps `Ctrl-C` to exit 130 and a closed stdout pipe to exit 0.
+- `web` is the name the tool had before it was published. Where a local wrapper for it exists it
+  `exec`s `wsc` rather than reimplementing anything, so an old habit or an old script reaches the
+  same code. That wrapper lives outside this repository and is not installed by the package.
+
+## `--self-test`
+
+```console
+$ wsc --self-test
+PASS ddg lite parser
+...
+SUMMARY pass=30 fail=0
+```
+
+Thirty checks of the pure parts: the result parsers, the source parsers, the extraction rules, the
+markdown conformance suite, the document router, the sitemap reader, the origin filter, the
+js-shell heuristic and the no-identity check. It runs offline with no SearXNG and no render
+backend, which is why `scripts/check.sh` uses it as a gate. Exit code `0` when every check passed,
+`1` otherwise.
+
+## Global flags
+
+| flag | meaning |
+|---|---|
+| `-h`, `--help` | print the usage block and exit 0 |
+| `-V`, `--version` | print `webscour <version>` and exit 0 |
+| `--self-test` | run the offline checks |
+
+`wsc` with no arguments prints the same usage block and exits `1`, so an empty invocation is not
+mistaken for success. An unknown verb prints `unknown command '<name>'` on stderr, the usage block
+on stdout, and exits `2`.
+
+---
+
+# docs/sources.md
+
+# Sources
+
+`--source` decides who gets asked. Every source is keyless: no API token, no account and no
+client id sits anywhere in this tool. Rate limits are the ones the upstream service publishes or
+enforces, so they are properties of your IP, not of this tool.
+
+## The three families
+
+The source layer has three shapes, and the shape tells you what to expect.
+
+- **The local meta-search**, `web`. One loopback call, several upstream engines merged, and each
+  row tagged with the engines that produced it. This is the general case.
+- **Direct service APIs**, `github`, `so`, `hn`, `arxiv` and `discourse:<base>`. One named
+  service, its own ranking, its own rate limit.
+- **Keyless single-purpose endpoints**, the fourteen below. One endpoint per kind of question,
+  each with a pure parser that `--self-test` exercises offline.
+
+`docs/routing.md` carries the decision table and the measured cost of each family.
+
+## The table
+
+| `--source` | what it queries | key | rate limit | output shape |
+|---|---|---|---|---|
+| `web` (default) | the local SearXNG on `http://127.0.0.1:8888`, which fans out to its enabled engines; then the DuckDuckGo lite page, the DuckDuckGo html page and Bing | none | SearXNG's engines pace themselves; the CLI spaces live queries to at most one per second across processes | rows tagged with their engines, `[naver,bing]` |
+| `github` | `api.github.com/search/repositories` and `api.github.com/search/issues` | none | 10 requests per minute unauthenticated; one `github` search spends 2 of them | repo rows carry language and stars; issue rows carry state and body |
+| `so` | `api.stackexchange.com/2.3/search/advanced` with `site=stackoverflow` | none | Stack Exchange's anonymous quota; the command reports a refusal, it does not retry | `title (score N)`, then `answered` or `open` plus tags |
+| `hn` | `hn.algolia.com/api/v1/search` | none | Algolia's public search tier; no batch mode here | `title`, then points and comment count |
+| `arxiv` | `export.arxiv.org/api/query`, the Atom feed | none | arXiv's request policy; one query per call | `title`, the `abs` URL, the abstract as the snippet |
+| `discourse:<base>` | `<base>/search.json?q=<query>` | none | the forum's own anonymous limit | topic title, topic URL, blurb |
+| `wikipedia` | `en.wikipedia.org/w/api.php`, list=search | none | none published; one request per call | article title and the article URL |
+| `openalex` | `api.openalex.org/works` | none | none published; a polite email pool exists but this tool sends no identity | work title, DOI or landing URL, abstract |
+| `crossref` | `api.crossref.org/works` | none | none published | work title, DOI URL, container and year |
+| `arxiv-api` | the same Atom endpoint as `arxiv`, under the alias the tool-call schema uses | none | as `arxiv` | as `arxiv` |
+| `europepmc` | `ebi.ac.uk/europepmc/webservices/rest/search` | none | none published | title, DOI, PubMed or Europe PMC URL |
+| `pubmed` | `eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi` | none | NCBI's policy; a keyless call gets the default pool | title, PubMed URL, journal and date |
+| `pypi` | `pypi.org/pypi/<name>/json` | none | none published | project name, PyPI URL, version, summary, release date |
+| `npm` | `registry.npmjs.org/<name>/latest` | none | none published | package name, npm URL, version, description |
+| `crates` | `crates.io/api/v1/crates/<name>` | none | crates.io asks for a descriptive user agent, which the tool sends | crate name, crates.io URL, version, description |
+| `devto` | `dev.to/api/articles?tag=<tag>` | none | dev.to's public limit | article title, URL, tags, reactions |
+| `wayback` | `web.archive.org/cdx/search/cdx` | none | the archive rate-limits bursts; a 429 is reported as a note, not a failure | snapshot URL and timestamp |
+| `googlenews` | `news.google.com/rss/search` | none | Google's RSS limits; no key involved | headline, source, publication date |
+| `bbc` | `feeds.bbci.co.uk/news/rss.xml` | none | none published; one feed read per call | headline, article URL, date |
+
+`<base>` is a full origin with a scheme, for example
+`discourse:https://forums.developer.nvidia.com`. A `--source` value that matches none of those
+shapes is a usage error: stderr lists every accepted value and the exit code is 2.
+
+`--fresh` is not a source. It restricts the answer to the freshness rows (Google News, BBC and
+SearXNG's news category), merges them, and sorts by publication date with the newest first.
+`--since YYYY-MM-DD` sets the floor for that sort.
+
+## What each source is good at
+
+**`web`.** The default, and the right first attempt for a question about the world. The local
+SearXNG merges several upstream engines, so one suspended engine does not empty the answer, and
+each row tells you which engines produced it. When the local service is down the command falls
+back to the three scrapers, one `backend <name>: <reason>` line per attempt on stderr. From a
+residential IP those scrapers mostly answer a bot check, so the local backend is the one that
+matters.
+
+**`github`.** Code, not prose. Use it when the answer is a repository (a library that does X) or
+an issue (someone already hit this error). It spends two API calls per query and prints the
+remaining budget, so a loop is easy to stay under.
+
+**`so`.** A symptom, an error text, a stack trace. Stack Overflow rows carry the score and
+whether the question is answered, which is the cheapest signal about whether the page will help.
+Prefer it over `web` when your query is an exception message rather than a concept.
+
+**`hn`.** Opinion and experience: "has anyone run this in production", "what did people say about
+this release". Story points and comment counts are the ranking you actually get, so a low-score
+row is not worth opening.
+
+**`arxiv`.** A paper, by topic rather than by citation. The snippet is the abstract, so one query
+often decides whether you need the PDF; follow up with `wsc pdf` on the `abs` URL's `/pdf/` form.
+Prefer it over `web` for anything where a blog summary would be second hand.
+
+**`discourse:<base>`.** One forum's own search, which is the only way to reach posts that no
+general engine indexes. The NVIDIA developer forum is the worked example; the same shape works
+for any Discourse instance that leaves anonymous search on.
+
+**The scholarly four** (`openalex`, `crossref`, `europepmc`, `pubmed`). Use them when you want a
+record rather than prose: a DOI, a citation, a journal, a date. `pubmed` and `europepmc` overlap
+by design and differ in what they index; `openalex` is the widest net and `crossref` is the
+metadata of record for a DOI.
+
+**The package four** (`pypi`, `npm`, `crates`, `devto`). These are exact lookups by name, not
+searches. `wsc search requests --source pypi` either finds the project or does not; it is a check,
+not a query.
+
+**`wayback`, `googlenews`, `bbc`.** `wayback` answers "what did this URL say before it died", and
+`fetch --archive` uses the same machinery. `googlenews` and `bbc` are the freshness pair: the
+answer is a dated headline, and `--fresh` is how you get them sorted.
+
+## Choosing a source
+
+1. Is the answer a paper? Use `arxiv`, or `openalex` / `crossref` / `pubmed` if you want a DOI and
+   a citation record rather than an abstract.
+2. Is the answer a repository or an issue? Use `github`.
+3. Is the query an error message or a stack trace? Use `so`.
+4. Do you want experience rather than documentation? Use `hn`.
+5. Do you want a package's current version? Use `pypi`, `npm` or `crates`.
+6. Is the question specific to a product whose forum you know? Use `discourse:<base>`.
+7. Do you need something published in the last day? Use `--fresh`, or `googlenews` / `bbc`
+   directly.
+8. Do you need a page that no longer exists? Use `wayback`, or `fetch --archive`.
+9. Otherwise use `web`. It is the default because it is the general case, and its rows tell you
+   which engine answered so a bad answer is diagnosable.
+
+Two habits worth keeping:
+
+- Run `web` first when you do not know which of the others applies. The rows name their engines,
+  and a specialised source can be the second query rather than a guess.
+- `github`, `so`, the package four and `discourse` are exact-match searches over a small corpus. A
+  natural-language question does badly there; three or four distinctive words do well.
+
+## Forums and documents
+
+`fetch` rewrites a topic URL on `forums.developer.nvidia.com` to the thread's `.json` form and
+prints `#post author` with plain text. That is the readable version of a forum page and it needs
+no render.
+
+`fetch` also resolves a known site through its own API when the plain page is measurably worse,
+and announces it on stderr as `route: <name>`. `--no-route` turns that off. A route that declines
+falls back to the plain path and says so only under `-v`; a route never turns a page that used to
+work into a failure.
+
+`pdf` and `fetch` share one document path: a URL whose content type or extension is a PDF, docx or
+epub is downloaded once and handed to the first working local backend. Nothing is uploaded
+anywhere to read it.
+
+---
+
+# docs/privacy.md
+
+# Privacy
+
+This page states what leaves the machine, what does not, what is logged, and how to check the
+claims yourself. Everything here describes the default configuration: the bundled local SearXNG
+on loopback, and nothing else. If you point the CLI at a remote SearXNG you have changed the
+trust boundary, and the last section says what that means.
+
+## What leaves the machine
+
+Exactly one thing for a search: **the query**.
+
+1. `wsc search "<query>"` sends the query text to `http://127.0.0.1:8888`, the local SearXNG,
+   over loopback. That request also carries `format=json`, `safesearch=0` and `timeout_limit=6`.
+2. SearXNG forwards the query to whichever of its enabled upstream engines your IP can use. That
+   is the only step where the query leaves the machine, and it is SearXNG doing it, not this CLI.
+3. `wsc fetch`, `wsc map` and `wsc crawl` send the URL you named, and nothing else, to the host
+   that URL points at. There is no query in those requests.
+4. `wsc search --source <service>` skips SearXNG and sends the query straight to that service.
+   That is one service, named in the command, instead of a meta-search.
+
+The outgoing request headers are fixed and minimal: one user agent string identifying a normal
+browser, `Accept-Language: en-US,en;q=0.9`, and the accept header the request needs. There is no
+cookie jar, no referrer, no client id, and no header carrying anything about you.
+
+`wsc --self-test` is the exception that proves the rule: it opens no socket at all. It runs
+offline by construction, and `scripts/check.sh` depends on that.
+
+## What never leaves
+
+None of these are read by the tool, so none of them can be sent:
+
+- **URLs you fetch.** `map` and `crawl` send only the URL you gave them, plus the links they
+  follow on that same origin. Nothing about what you fetched goes anywhere else.
+- **Your working directory.** The tool never asks the process for it in order to identify you.
+  Its cache directory is resolved relative to the working directory for a local file write only,
+  and that path is never sent.
+- **Your hostname.** No `gethostname` call exists in the code.
+- **Your username and home path.** The tool resolves its own directories by expanding `~`,
+  locally only. Nothing sends the result.
+- **Your project names.** Nothing enumerates a project, a repository or a config file in your
+  working tree.
+
+That is not an assurance to take on faith. `wsc --self-test` includes a check named
+`no identity in request` that reads the source of `webscour/cli.py` and fails if the assembly
+`get` + `pass`, `gethost` + `name` or `get` + `login` appears anywhere in it. Those three are the
+ways a Python program reads the pieces of an identity, and the check is why they are absent rather
+than merely unused.
+
+## What is logged
+
+**The tool logs nothing.** It writes no log file, no history and no state about your queries. Two
+files it does write are yours and local:
+
+- `~/.cache/web/last-live` holds one floating point timestamp of the last live request, which is
+  what enforces at most one web query per second across processes. It holds a number, not a
+  query, and `cat` shows it.
+- `./.webscour/` exists only if you asked for it with `--save`, `--save-only` or `cache get`. It
+  contains the page text you asked to keep and an index beside it. `wsc cache path` prints the
+  directory and `wsc cache prune --all` removes it.
+
+**The bundled SearXNG drops the query.** Stock SearXNG logs the outgoing request URL at WARNING
+from `searx.network.<engine>`, and that URL carries the query text as `?q=...`. The bundled unit
+does three things about that:
+
+- `GRANIAN_LOG_ACCESS_ENABLED=false` in the unit, so there is no access log at all.
+- `GRANIAN_LOG_LEVEL=warning`, so nothing below a warning is emitted.
+- `searx/serve.py` is the WSGI entrypoint instead of stock `searx.webapp`, and it installs a
+  `logging.Filter` on the root logger, `searx`, `searx.network`, `searx.search`, `searx.webapp`
+  and `granian`. The filter rewrites every URL query string in a record to `?<query withheld>`
+  before any handler sees the record, keeping the host so the warning still says which engine was
+  suspended.
+
+Autocomplete is off in the generated settings (`autocomplete: ""`), so no keystroke leaves the
+box. `query_in_title` is off. Metrics are on, because `/stats/errors` is what `wsc doctor` reads,
+and that endpoint carries engine failure counts and no query text.
+
+## How to verify it
+
+Read the three files that make the claim. They are short and they are the actual mechanism.
+
+```bash
+sed -n '1,43p' searx/serve.py        # the filter, and the loggers it is installed on
+sed -n '199,231p' searx/install.sh   # the unit: bind, access log, level, entrypoint
+sed -n '128,164p' searx/install.sh   # the generated settings: autocomplete, metrics, bind
+```
+
+Then check the running machine rather than the source:
+
+```bash
+systemctl --user cat searxng-local        # the installed unit, with its environment
+ss -ltn | grep 8888                       # one row, and it starts 127.0.0.1:
+journalctl --user -u searxng-local -n 50  # recent records; no query text in any of them
+```
+
+Run a query you can recognise, then read the journal:
+
+```bash
+wsc search "privacy-check-marker-<a word you never use>" --limit 1
+journalctl --user -u searxng-local --since "2 min ago"
+```
+
+You will see the engine warnings, if any, with `?<query withheld>` where a URL would have carried
+your terms, and no record containing the marker. That is the whole claim, and it is falsifiable in
+two commands.
+
+To check what actually leaves your machine to the internet rather than to loopback, watch the
+sockets:
+
+```bash
+ss -tunp | grep -i searx                  # the SearXNG process's outbound connections
+```
+
+Those connections go to the upstream engines, and they carry the query. That is what a
+meta-search does.
+
+## Where the tool sits, and where it does not protect you
+
+- **Your IP is your identity to the upstream engines.** A local proxy does not change that. The
+  point of the local SearXNG is that no third party sees who is asking through an API key, not
+  that the request is anonymous.
+- **Send generic technical terms.** Private context in a query is a mistake regardless of the log
+  settings, because the upstream engine receives the query by design.
+- **A direct `--source` is a direct request.** A service named on the command line sees the query
+  and your IP, from your machine, with no middleman. Those services keep their own logs, and this
+  tool has no say in that.
+- **`fetch`, `map` and `crawl` reveal the URL to that site.** A crawl of a private intranet host
+  is visible to that host. The tool paces requests but does not hide them.
+
+## If you point it at a remote SearXNG
+
+The CLI reads one environment variable for the backend:
+
+```bash
+export WEBSEARCH_SEARXNG="https://searx.example.net"
+wsc search "sqlite wal mode"
+```
+
+That changes the trust boundary completely, and you should be explicit about how:
+
+- **The query travels over the network to that host** before it reaches any engine, so the
+  operator of that instance sees it, and so does every hop in between unless the URL is https.
+- **The log claim stops applying.** `searx/serve.py` and the generated settings belong to the
+  bundled unit on your machine. A remote instance runs whatever its operator installed.
+- **`wsc doctor` reports on that host, not on yours.** It will call a remote instance healthy and
+  endorse it, because health is all it measures.
+
+The default is loopback, and the reason to keep it there is that it is the only configuration in
+which every claim on this page is a property of code you can read on your own disk.
+
+Related: [self-hosting](self-hosting.md) covers what `wsc setup` writes and how to remove it, and
+[sources](sources.md) names the services a direct `--source` query reaches.
+
+---
+
+# docs/self-hosting.md
+
+# Self-hosting the search backend
+
+`wsc setup` installs one thing: a SearXNG instance that belongs to your user, listens on
+loopback, and exists so that `wsc search --source web` has somewhere local to ask. This page says
+exactly what that install touches, how to move it to another port, how to use a remote instance
+instead, and how to remove it so nothing is left behind.
+
+You can read the installer instead of trusting this page: it is `searx/install.sh`, 267 lines,
+and it is the only thing `wsc setup` runs. `wsc setup` shells out to it rather than reimplementing
+it, so there is one definition of "installed".
+
+## What `wsc setup` writes
+
+Everything below is under your home directory, and all of it is yours. No sudo is used and no
+system-wide path is touched. The installer refuses to run as root for exactly that reason.
+
+| path | what it is |
+|---|---|
+| `~/.local/share/searxng/src` | a shallow git clone of SearXNG, checked out detached at a pinned commit (`de722ab1bc95`, SearXNG 1.0.0). A commit, not a tag, because a tag can move |
+| `~/.local/share/searxng/venv` | a Python venv made with `python3.11` (override with `SEARX_PYTHON`), with `requirements.txt` and `requirements-server.txt` installed. It provides `granian`, the WSGI server the unit runs |
+| `~/.local/share/searxng/venv/.searx-install` | a marker holding the commit and a hash of the requirements. When it matches, pip is skipped, which is what makes a second install fast |
+| `~/.local/share/searxng/engines.json` | the engine state. Absent means every candidate is enabled. `wsc probe --quality --write` writes it, and the next install renders it into the settings |
+| `~/.local/share/searxng/serve.py` | a copy of `searx/serve.py`, the WSGI entrypoint with the query-redacting log filter. It is copied here so the unit never reads a repository |
+| `~/.config/searxng/secret_key` | 48 bytes of `secrets.token_urlsafe`, mode 600, generated once and kept across rebuilds so the settings do not churn |
+| `~/.config/searxng/settings.yml` | the generated settings, mode 600. Never hand-edit it: the installer rewrites it from `engines.json` on the next run |
+| `~/.config/systemd/user/searxng-local.service` | the systemd **user** unit, mode 644 |
+
+The unit runs as your user, in your user session, and is enabled so it starts at login. Its
+service section is deliberately narrow. It sets `SEARXNG_SETTINGS_PATH`, `GRANIAN_INTERFACE=wsgi`,
+`GRANIAN_HOST=127.0.0.1`, `GRANIAN_PORT=8888`, `GRANIAN_LOG_LEVEL=warning`,
+`GRANIAN_LOG_ACCESS_ENABLED=false` and `ExecStart=<venv>/bin/granian serve:app`, plus
+`NoNewPrivileges=yes`, `PrivateTmp=yes`, `ProtectSystem=strict`, `ProtectHome=read-only` and
+`ReadWritePaths` limited to `~/.local/share/searxng`.
+
+The generated settings pin the parts that matter: `server.bind_address: 127.0.0.1`,
+`limiter: false`, `public_instance: false`, `image_proxy: false`, `autocomplete: ""`,
+`query_in_title: false`, `enable_metrics: true`, `outgoing.request_timeout: 4.0` and
+`outgoing.max_request_timeout: 6.0`. Appended to that are the engine list and a per-engine
+timeout.
+
+After writing, the installer enables the unit, restarts it when anything changed, and waits for
+the port to answer. A second run with nothing changed prints `unchanged` through its steps and
+leaves the running service alone.
+
+## Check it, without changing anything
+
+```console
+$ wsc setup --check
+src            de722ab
+venv           present
+settings       1938
+state          present
+unit           enabled / active
+listen         127.0.0.1:8888
+lightpanda  /usr/bin/lightpanda
+```
+
+`src` is the short commit, `settings` is the file size in bytes, `state` says whether an engine
+selection exists, and `lightpanda` is the path the render path will use or a warning that it is
+not on `PATH`. `--check` exits 0 without writing anything.
+
+For the operational view, which includes engine health and one verdict line:
+
+```bash
+wsc doctor
+wsc doctor --json
+```
+
+## Run it on a different port
+
+There is no `--port` flag. The port is written in two places, and both are generated, so the
+honest procedure is to change both and then not re-run the installer until you mean to (the
+installer rewrites them from its own hardcoded `8888`).
+
+1. Stop the unit:
+
+   ```bash
+   systemctl --user stop searxng-local
+   ```
+
+2. Change the port in the settings file, in the `server:` section:
+
+   ```yaml
+   server:
+     bind_address: "127.0.0.1"
+     port: 8899
+   ```
+
+3. Change the port the unit passes to granian, with a drop-in rather than an edit:
+
+   ```bash
+   systemctl --user edit searxng-local
+   ```
+
+   In the override:
+
+   ```ini
+   [Service]
+   Environment=GRANIAN_PORT=8899
+   ```
+
+   A drop-in is the right tool here precisely because `install.sh` rewrites the unit file itself;
+   an override survives that rewrite.
+
+4. Reload, start, and confirm:
+
+   ```bash
+   systemctl --user daemon-reload
+   systemctl --user start searxng-local
+   ss -ltn | grep 8899
+   ```
+
+5. Point the CLI at it. The backend address comes from one environment variable:
+
+   ```bash
+   export WEBSEARCH_SEARXNG="http://127.0.0.1:8899"
+   wsc search "sqlite wal mode" --limit 3
+   ```
+
+   Put that export in your shell profile if the port is permanent. `wsc doctor` reads the same
+   variable, so it checks the port you actually use.
+
+`wsc setup --check` keeps checking `8888`, because that is the bundled installer's own view of the
+world. Use `wsc doctor` for the truth about a moved instance.
+
+## Use a remote SearXNG instead
+
+If you already run a SearXNG elsewhere, or you trust an instance someone else runs, do not install
+the bundled one. Set the same variable:
+
+```bash
+export WEBSEARCH_SEARXNG="https://searx.example.net"
+wsc search "postgres index bloat" --limit 5
+```
+
+The variable is read once, at import time, and trailing slashes are stripped. Everything that
+talks to the search backend uses it: `search --source web`, `doctor`, and the start-if-stopped
+attempt. Against a remote instance the start attempt is harmless: it only tries
+`systemctl --user start searxng-local` when the port refuses, and moves on when that fails.
+
+Read [privacy](privacy.md) before you do this. A remote instance changes who sees your query, and
+the log redaction this project installs applies only to the unit it installs.
+
+## Remove it cleanly
+
+There is no `wsc uninstall`. The pieces are named, so removal is four commands.
+
+```bash
+systemctl --user disable --now searxng-local
+rm -f ~/.config/systemd/user/searxng-local.service
+systemctl --user daemon-reload
+rm -rf ~/.local/share/searxng ~/.config/searxng
+```
+
+What that does, in order: stops the service and removes it from the boot set; deletes the unit
+file; reloads systemd so the unit is forgotten; then deletes the clone, the venv, the copied
+`serve.py`, the engine state, the generated settings and the secret.
+
+Two things it deliberately does not touch:
+
+- `~/.cache/web/last-live`, the one-second pacing stamp. It holds a timestamp, no query, and it
+  is harmless; `rm -rf ~/.cache/web` if you want it gone.
+- The `wsc` executable and the Python package. Removing those is your package manager's job:
+  `pipx uninstall webscour`, `uv tool uninstall webscour`, or `pip uninstall webscour`.
+
+After removal, `wsc search --source web` still runs: with no local backend it falls back to the
+scrapers, prints one `backend <name>: <reason>` line per attempt on stderr, and `wsc doctor`
+reports `VERDICT DOWN` with a hint. Nothing else breaks. `fetch`, `pdf`, `map` and `crawl` never
+used the local service in the first place.
+
+## If the unit will not start
+
+```bash
+systemctl --user status searxng-local
+journalctl --user -u searxng-local -n 40
+```
+
+The usual causes, in order of frequency:
+
+- `python3.11` was missing at install time. Set `SEARX_PYTHON` to an interpreter you have and run
+  `wsc setup --force` to rebuild the venv.
+- The port is already taken. `ss -ltn | grep 8888` names the holder.
+- A requirements bump left the venv stale. `wsc setup --force` recreates it from the pinned commit.
+
+A rebuilt venv takes a few minutes, because it is a real pip install of SearXNG's requirements.
+Nothing about that install is a Python dependency of `wsc`; the tool itself still has none.
+
+`docs/install.md` is the installer page, which also covers the uninstall from the package side.
+
+---
+
+# docs/contributing.md
+
+# Contributing
+
+This repository has one rule about scope: it is a small, dependency-free, Linux-first CLI. A
+change that adds a runtime dependency, a network call in a pure module, or a daemon does not
+belong here. Everything else is open.
+
+## Repo layout
+
+The Python package is small on purpose. Each module owns one question, and the boundary between
+them is the design.
+
+| module | what it owns |
+|---|---|
+| `webscour/extract.py` | bytes to text. The HTML tokenizer, the search-result parsers, the sitemap and robots readers, the js-shell heuristic, the document router and the link filter. It defines the four decisions a caller makes on a result (`js_shell_reason`, `document_backend`, `filter_links`, `same_origin`) as pure functions, so the self-test and the unit tests check them with no network and no browser |
+| `webscour/backends.py` | everything that talks to the network, plus the pacing. HTTP, the SearXNG client and its start-if-stopped path, the scraper fallbacks, the API clients for GitHub, Stack Exchange, Hacker News, arXiv and Discourse, the bot-check detector, and the render engines behind lightpanda and playwright |
+| `webscour/sources.py` | the keyless single-purpose endpoints and their parsers. Each source is a pure parser plus the one request that feeds it, in that order, so a parser is testable without a socket |
+| `webscour/routes.py` | URL to a structured endpoint, when a site publishes one. A route returns markdown or text, never HTML, and a route that declines is a fallback rather than an error |
+| `webscour/cache.py` | the on-disk cache under `./.webscour/`: one file per fetched URL, an index beside them, a TTL and a prune |
+| `webscour/cli.py` | the argv surface: verbs, flags, printing, exit codes. Every command parses its arguments, calls into the modules above, and decides what the user sees. It opens no socket itself |
+| `webscour/argv.py` | the one place a JSON tool call becomes a command line. The MCP server and the pi extension both call it, so a flag is added once |
+| `webscour/searx.py` | the search-backend lifecycle: install it, measure it, check it. It shells out to the scripts in `searx/` rather than reimplementing them, because those scripts are the ones a user can read and run by hand |
+| `webscour/render_venv.py` | the optional playwright fallback and the venv this tool owns. One place is allowed to install a Python package, and this is it |
+| `searx/` | the bundled SearXNG installer, the engine probe and the query-redacting WSGI entrypoint. Data shipped for a human to read and run, not a package module: it is not installed, not imported, and deliberately not linted |
+| `mcp/` and `extensions/pi/` | the two front ends. Both are thin and both route through `webscour/argv.py` |
+
+`tests/` holds the unit tests, the markdown conformance suite and the extraction benchmark,
+`scripts/` holds the release gate, `docs/decisions/` holds the reasoning, and `skill/` holds the
+agent-facing instructions that ship as a pi package and a Claude Code plugin.
+
+## The `extract.py` rule
+
+**`webscour/extract.py` must import no network module.** Not `socket`, not `ssl`, not
+`http.client`, not `urllib.request`. It may parse `urllib.parse`, because that is string handling,
+and it may shell out to a *local* binary (`pdftotext`, `pandoc`, `markitdown`), because reading a
+file you already have is not a network operation.
+
+The rule is enforced, not documented and hoped for. `tests/test_extract.py` installs an import
+hook that raises `ImportError` for `socket`, `ssl` and `http`, imports the module in a subprocess,
+and fails if the import does not survive. If you break the rule, the test names the module you
+added.
+
+The reason is testability: the extraction rules are the part most likely to be wrong, and they are
+the part that must be checkable with no network, no SearXNG and no render backend. A module that
+cannot open a socket cannot accidentally become an integration test. `webscour/sources.py` follows
+the same split for the same reason: a parser takes a dict or an XML string, and the request lives
+in its own function.
+
+## Run the tests
+
+```bash
+python3 -m unittest discover -s tests
+```
+
+The suite is offline by construction. The fetch tests inject a fake `http_raw` and a fake
+`render_page`, so no test reaches the network. Run a single file or a single class the ordinary
+way:
+
+```bash
+python3 -m unittest tests.test_extract
+python3 -m unittest tests.test_cli.ExitCodeTest
+```
+
+The offline self-test is a second, shipping gate over the same pure functions:
+
+```bash
+python3 -m webscour --self-test
+```
+
+It prints one `PASS <name>` line per check and a `SUMMARY pass=N fail=N` line, and exits non-zero
+if anything failed. It runs in an installed package too, which is why it exists next to the unit
+tests rather than instead of them.
+
+## Run the release gate
+
+```bash
+./scripts/check.sh
+```
+
+That is the only definition of "releasable". It prints one `PASS <name>` or `FAIL <name> :: <why>`
+line per check and a summary, and stops at the first failure. In order: `ruff check .`,
+`ruff format --check .`, the unit tests, `--self-test`, the entry point, the tag agreement, the
+build, `twine check`, then a set of guards.
+
+The guards are the interesting part, because each one is a fact that has been wrong before:
+
+- one version, in one place: `webscour.__version__` is the source, and the tag and the pi manifest
+  must agree with it.
+- text hygiene: no em dash, no en dash and no emoji in the prose we wrote. Fenced blocks are
+  exempt on purpose, because a real capture is evidence and transpiling it would be a lie.
+- the licence is present and is MIT, and the metadata says so.
+- zero runtime dependencies, and no import could smuggle one in. Every module is parsed and its
+  imports are checked against `sys.stdlib_module_names`.
+- no shipped file names a home directory.
+- the wheel holds the package and the `searx/` data files, and nothing else.
+- every config file parses.
+
+The script needs `ruff`, `build` and `twine` importable. The documented way to provide them is a
+throwaway venv the gate itself does not create:
+
+```bash
+python3 -m venv .venv-dev && .venv-dev/bin/pip install ruff build twine
+./scripts/check.sh
+```
+
+`.github/workflows/` are thin wrappers that install the same three tools and run the same script.
+No check exists only in CI: if a workflow learns something `check.sh` does not know, the knowledge
+belongs in the script.
+
+## The extraction benchmark
+
+`scripts/check.sh` runs offline, so the benchmark is not part of it. Set `BENCH=1` to add it, or
+run it directly:
+
+```bash
+python3 tests/bench_extract.py                   # offline, from the captured fixtures
+python3 tests/bench_extract.py --live            # re-fetch the pages first, then measure
+python3 tests/bench_extract.py --tolerance 0.10  # allowed regression over the baseline
+python3 tests/bench_extract.py --save-baseline tests/baselines/0.2.0.json
+```
+
+It compares our reading text with trafilatura's on six reference pages, from captured fixtures in
+`tests/fixtures/bench/`, and fails when a page regresses past `tests/baselines/` or loses one of
+its required phrases. Three numbers per page: bytes produced, lines produced, and `prec`, the
+ratio of bytes out to bytes of naive visible text. A tolerance of 0.10 is the default.
+
+trafilatura is measured, never depended on. It lives in a throwaway venv:
+
+```bash
+python3 -m venv /tmp/tfvenv && /tmp/tfvenv/bin/pip install trafilatura
+```
+
+When that venv is absent the trafilatura column reads `n/a` and only our own baseline decides.
+That is deliberate: a benchmark that cannot run must not block a release, but it must be visible
+in the output that it did not run.
+
+A baseline is a file, not a claim. When a change is meant to improve extraction, save a new
+baseline in the same commit and say in the message what moved.
+
+## Decision records
+
+**Every design choice that cost someone an argument gets a record in `docs/decisions/`.** The
+form is fixed, because a record that varies in shape is a record nobody rereads:
+
+- a numbered file name and a title: `0006 - <the decision in one line>`
+- `**Status:**` with the date, so a reversal is visible
+- `## Context`, `## Options`, `## Choice`, `## Evidence`, `## Reversal condition`
+
+`## Evidence` is the part that separates this from an opinion: a measurement, a date, and the
+command that produced it. `## Reversal condition` is the part that keeps a record honest: the
+observation that would make you choose differently. A record without both is a press release.
+
+The five records that exist cover: no Python dependencies, lightpanda required with playwright as
+a fallback, the extraction tag list adapted from trafilatura's measured settings, silent stderr
+with `-v`, and the playwright venv owned by the tool. Read them before you change the thing they
+describe; if you disagree, write `0006` rather than editing `0003`.
+
+## Commits
+
+Conventional Commits, one logical change per commit.
+
+```text
+feat: add a --format markdown pass to wsc pdf
+fix: keep a lone <pre> block verbatim when trimming whitespace
+docs: state the loopback bind in the self-hosting page
+```
+
+While the major version is 0 there is no stable API to break, so the bump rules are flat:
+
+| commit | bump |
+|---|---|
+| `fix:` | patch, `0.1.0` to `0.1.1` |
+| `feat:` | minor, `0.1.0` to `0.2.0` |
+| `perf:`, `refactor:`, `chore:`, `ci:` | patch |
+| anything with `!` | minor while the major is 0 |
+| anything with `!` | major at `1.0.0` and after |
+
+That last pair is the whole point of `cliff.toml`. A 0.x project that jumps to `1.0.0` because
+someone marked a commit breaking has lied to every user who reads the version as "same major, safe
+to upgrade". Breaking changes become `1.0.0` when the maintainers say so, not when a commit
+message says so.
+
+Grouping into the changelog follows the same file: `feat` goes to Added, `fix` to Fixed, `perf`,
+`refactor`, `chore` and `ci` to Changed, `docs` to Documentation, and `test` and `style` are
+skipped. A hand-written `## Unreleased` section at the top of `CHANGELOG.md` is for notes no commit
+message can carry.
+
+## Cutting a release
+
+```bash
+./scripts/release.sh 0.2.0 --dry-run   # show what would happen
+./scripts/release.sh 0.2.0             # gate, stamp, changelog, tag, print the push commands
+```
+
+The script refuses a dirty tree and a version that does not increase, runs `check.sh`, writes the
+version into `webscour/__init__.py` and the pi manifest, builds the changelog section from git
+cliff, commits and tags. It never pushes and never publishes: it prints those two commands so the
+person running them has read them first. A pushed tag is published to the world, and a published
+release cannot be withdrawn. `docs/maintaining.md` is the fuller runbook.
+
+## Style
+
+`ruff` decides formatting and linting, with `target-version = "py311"`, `line-length = 100`, and
+sorted imports. Prose is wrapped by hand at roughly 100 columns and the formatter is told to leave
+docstrings alone. Two conventions that are not ruff's business:
+
+- **Stdout is the answer, stderr is the diagnostic.** A new line that explains a choice goes
+  through `vwarn` and therefore behind `-v`. A lost capability goes through `warn` and always
+  prints. A fact about the answer (`render:`, `route:`, `cache: hit`) is its own short exception
+  and is documented where the verb is.
+- **Report what you cannot confirm.** A docstring or a doc line that states a number should say
+  where the number came from, and a fact you did not verify belongs in the report, not in the
+  prose.

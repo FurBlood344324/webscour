@@ -1,0 +1,12 @@
+{
+  "name": "webscour",
+  "version": "0.1.0",
+  "description": "The webscour CLI as a pi package: one skill, no extensions, no runtime dependencies.",
+  "private": true,
+  "license": "MIT",
+  "pi": {
+    "skills": [
+      "skill/SKILL.md"
+    ]
+  }
+}

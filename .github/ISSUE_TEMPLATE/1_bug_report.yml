@@ -1,0 +1,92 @@
+name: Bug report
+description: Something produced the wrong text, the wrong exit code, or nothing at all.
+title: "bug: "
+labels: ["bug", "needs-repro"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A minimal reproduction is the whole report. If the report cannot be reproduced from
+        the command you paste below, it will probably be closed, however real the problem is.
+
+        A page that answers **403**, **429** or a CAPTCHA is not a bug. That is a site refusing
+        a datacenter or residential IP, and it is documented in
+        [docs/routing.md](https://github.com/FurBlood344324/webscour/blob/main/docs/routing.md).
+        It is only a bug when the route should have applied and did not.
+
+  - type: textarea
+    attributes:
+      label: The exact command
+      description: The whole `wsc` invocation, flags included, in a fenced block. Not a summary of it.
+      placeholder: |
+        wsc fetch https://example.com/article --max-chars 4000 -v
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Minimal reproduction
+      description: |
+        The smallest input that still shows the problem, and the steps from a clean shell.
+        If it needs a specific page, paste the URL and the date; pages change.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What happened
+      description: stdout and stderr as they were, plus the exit code (`echo $?`).
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What you expected
+      description: What the output should have been, and why that is the right answer.
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: wsc --version
+      placeholder: webscour 0.1.0
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: wsc doctor
+      description: |
+        The whole block, verdict line included. It carries the SearXNG state, the engine health
+        and which render backends are present, which is usually where the answer already is.
+      render: text
+      placeholder: |
+        unit      active (enabled at boot)
+        listen    127.0.0.1:8888
+        ...
+        VERDICT OK (8/10 engines answering, 2 blocked)
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Platform
+      description: The output of `uname -orsm`.
+      placeholder: Linux 6.8.0-45-generic x86_64 GNU/Linux
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: Is the site publicly reachable right now?
+      description: |
+        Open the same URL in a browser. A page behind a login, a paywall or a region is a
+        different problem from a page that answers in a browser and not here.
+      options:
+        - "Yes, it opens in a browser without a login"
+        - "No, it needs a login, a paywall or a region I am outside of"
+        - "No, it does not open in a browser either"
+        - "I did not check"
+    validations:
+      required: true

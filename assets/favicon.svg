@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16" role="img" aria-label="webscour">
+  <title>webscour</title>
+  <g fill="currentColor">
+    <rect x="1" y="1" width="6" height="6"/>
+    <rect x="9" y="1" width="6" height="6"/>
+    <rect x="1" y="9" width="6" height="6"/>
+  </g>
+  <path d="M9.4 15.4 L15.4 9.4" fill="none" stroke="currentColor" stroke-width="2.6"/>
+</svg>

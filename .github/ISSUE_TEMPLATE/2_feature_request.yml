@@ -1,0 +1,66 @@
+name: Feature request
+description: A problem the tool should solve, or a verb it should offer. Lead with the problem.
+title: "feat: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Two answers below decide whether this can be built at all: whether it needs a source
+        that has no free API, and whether it would add a Python dependency. The project ships
+        `dependencies = []` and there is a test that keeps it that way, so the second answer
+        is not a preference, it is a constraint.
+
+  - type: textarea
+    attributes:
+      label: The problem
+      description: |
+        What are you trying to do, and where does it currently cost you time? Describe the
+        task, not the flag you have in mind; the flag is easier to choose once the task is clear.
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What you do today instead
+      description: The workaround, the other tool, or the manual step. This is what a fix has to beat.
+    validations:
+      required: false
+
+  - type: dropdown
+    attributes:
+      label: Does it need a network source with no free API?
+      description: |
+        A key, an account, a paid tier or a scrape of a site that blocks us all count as yes.
+        A source that answers unauthenticated would be added as a new `--source` value instead.
+      options:
+        - "No, it works against sources the tool already has"
+        - "No, but it needs a new free, keyless API"
+        - "Yes, and that source needs an account or a key"
+        - "Yes, and that source needs a paid tier"
+        - "I do not know"
+    validations:
+      required: true
+
+  - type: dropdown
+    attributes:
+      label: Would it change the dependencies = [] guarantee?
+      description: |
+        Anything that is not the standard library or a system binary would. An optional extra
+        that upgrades behaviour is also a change, because it makes two installs behave
+        differently.
+      options:
+        - "No, standard library and existing binaries only"
+        - "It needs a system binary that is not installed today"
+        - "It would need a Python package"
+        - "I do not know"
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: What the output would look like
+      description: One realistic command with its expected output, so the shape is agreed on first.
+      render: text
+    validations:
+      required: false

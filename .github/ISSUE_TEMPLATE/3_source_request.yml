@@ -1,0 +1,75 @@
+name: Source request
+description: A site or API that wsc should be able to search. The most common contribution.
+title: "feat(source): "
+labels: ["enhancement", "source"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A source is a `--source` value that answers one query. It ships with a parser, a
+        fixture captured from a real response, and a self-test check, so a request that names
+        the API and its shape is much cheaper to build than one that names a website.
+
+        The two facts that decide whether it is buildable: does it need a key, and does it ask
+        the tool to hold state (an account, a token, a cookie). A source that needs an account
+        contradicts the first line of the README, so it needs an argument, not just a link.
+
+  - type: input
+    attributes:
+      label: Site or API
+      description: The base URL, and the name it would take as `--source`.
+      placeholder: https://example.org/api, so `--source example`
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Documented API
+      description: |
+        A link to the API documentation, if one exists. A source with no documented API is a
+        scrape, which is allowed for the `web` fallback but is a much worse trade for a named
+        source: it breaks whenever the site redesigns.
+      placeholder: https://example.org/docs/api
+    validations:
+      required: false
+
+  - type: dropdown
+    attributes:
+      label: Does it need a key or an account?
+      options:
+        - "No, it answers unauthenticated"
+        - "No, but it wants an optional token for higher limits"
+        - "Yes, a key is required"
+        - "Yes, an account and a login are required"
+        - "I do not know"
+    validations:
+      required: true
+
+  - type: input
+    attributes:
+      label: Rate limit, if known
+      description: |
+        Requests per minute or per day, and what happens when it is exceeded (429, an empty
+        body, a ban). The tool paces itself per host, so the number decides the pace.
+      placeholder: 60 requests/min unauthenticated, 429 above that
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: What the response looks like
+      description: |
+        A small real response, trimmed to two or three rows: shape matters more than the terms
+        you searched for. This becomes the fixture and the parser's first test.
+      render: json
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Why this source earns a verb
+      description: |
+        What can be found here that the existing sources cannot answer, and one query where
+        you would reach for it first.
+    validations:
+      required: true

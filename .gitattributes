@@ -1,0 +1,18 @@
+# Attributes are for git, and there are three jobs here: normalise the line endings, keep the
+# shell scripts runnable, and stop byte-exact fixtures from drowning a review.
+
+* text=auto eol=lf
+
+# A shell script with CRLF is a script that fails with "bad interpreter", which is a confusing way
+# to learn that a checkout was configured wrong.
+*.sh text eol=lf
+
+# `-diff`: these are evidence, not prose. A page captured from a remote server and a JSON baseline
+# are read by the tests as bytes and compared as numbers; a line-by-line diff of them in a pull
+# request is noise that hides the file next to it. The attribute only changes what git shows, so a
+# whitespace-only change is still a change and still has to be justified.
+tests/baselines/*.json -diff
+tests/markdown/**/*.md -diff
+
+# The captured pages the benchmark and the parsers run against: same reason, and they are large.
+tests/fixtures/**/*.html -diff

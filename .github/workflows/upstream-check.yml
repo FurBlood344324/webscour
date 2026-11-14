@@ -1,0 +1,53 @@
+# A wrapper, and the only workflow here that touches the live web. It is manual, it is allowed to
+# fail, and it blocks nothing: `continue-on-error: true` at the step level means a red run is a
+# signal for a human to look at, never a reason a pull request cannot merge.
+#
+# Why it exists: SearXNG's upstream engines change their HTML without warning. A parser that
+# passed last month can start returning nothing this month, and a unit test cannot see that
+# because it never leaves the machine. So the check is live, it is scheduled by hand, and its
+# output is the evidence: which sources still answer, and what the run looked like.
+#
+# Run it when: an engine started returning junk, a fetch returns the chrome instead of the text,
+# or before a release. Do not add it to `ci.yml`.
+name: upstream-check
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "why this run (shows in the run name)"
+        required: false
+        default: "manual"
+
+permissions:
+  contents: read
+
+jobs:
+  live:
+    name: live searches and fetches
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: install the CLI under test
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+
+      # No SearXNG service in this job: the scrapers and the JSON APIs are what is being measured.
+      # A missing answer is a result, not a failure of the job.
+      - name: live checks
+        continue-on-error: true
+        run: ./scripts/upstream-check.sh
+
+      - name: upload the report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upstream-report
+          path: .agent-out/upstream-check.txt
+          if-no-files-found: warn

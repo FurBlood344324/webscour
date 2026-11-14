@@ -1,0 +1,49 @@
+# One file wins: the line endings and the indentation are decided here, so a diff never carries a
+# whitespace change. The tree is LF everywhere; `.gitattributes` is the enforcement, this is the
+# editor's side of the same rule.
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+# Python: four spaces is not a preference, it is the language's own idea of a block.
+[*.py]
+indent_size = 4
+max_line_length = 100
+
+# YAML and TOML are two-space formats by convention, and nested keys read worse at four.
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.toml]
+indent_size = 2
+
+[*.json]
+indent_size = 2
+
+[*.md]
+# A hard line break in Markdown is two trailing spaces, so the trimmer must not eat them.
+trim_trailing_whitespace = false
+indent_size = 2
+
+[*.{sh,bash}]
+indent_size = 2
+insert_final_newline = true
+
+[Makefile]
+indent_style = tab
+
+# Fixtures are bytes captured from a remote server: reformatting one would make it no longer a
+# fixture, and the benchmark's numbers would move for a reason nobody chose.
+[tests/fixtures/**]
+insert_final_newline = false
+trim_trailing_whitespace = false
+
+[tests/baselines/*.json]
+insert_final_newline = true

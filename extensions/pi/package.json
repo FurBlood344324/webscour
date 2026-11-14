@@ -1,0 +1,12 @@
+{
+  "name": "webscour-pi-extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The pi front end for webscour: one tool, web_scour, over the local wsc CLI.",
+  "license": "MIT",
+  "pi": {
+    "extensions": [
+      "./webscour.ts"
+    ]
+  }
+}

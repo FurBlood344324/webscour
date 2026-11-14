@@ -1,0 +1,163 @@
+#!/usr/bin/env bash
+# release.sh - cut a version, locally. It never pushes and never publishes.
+#
+#   ./scripts/release.sh 0.2.0          # refuse if dirty, gate, stamp, tag, print
+#   ./scripts/release.sh 0.2.0 --dry-run
+#   ./scripts/release.sh --help
+#
+# What it does, in order:
+#
+#   1. refuse a dirty working tree, and refuse a version that is not higher than the current one
+#   2. run scripts/check.sh, and stop if it fails
+#   3. write the version into webscour/__init__.py (the single source) and the pi manifest
+#   4. build the changelog section from git cliff (cliff.toml carries the 0.x bump rules),
+#      keeping the hand-written `## Unreleased` notes at the top of CHANGELOG.md
+#   5. commit the release, create the annotated tag v<version>
+#   6. print the exact commands to push and publish, and exit
+#
+# Pushing and publishing are separate, deliberate steps. This script cannot do them: a tag that
+# is pushed is published to the world, and a release that is published to PyPI cannot be
+# withdrawn. The two commands are printed so the person who runs them has read them first.
+#
+# Requirements: git, and optionally git-cliff. Without git-cliff the changelog section is a
+# stub saying so: an absent tool must not block a release, but it must be visible in the file.
+
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT" || exit 1
+PY="${PYTHON:-python3}"
+
+usage() {
+  sed -n '2,26p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+  exit 0
+}
+
+DRY=0
+VERSION=""
+for arg in "$@"; do
+  case "$arg" in
+    -h|--help) usage ;;
+    --dry-run) DRY=1 ;;
+    -*)
+      echo "release: unknown flag $arg" >&2
+      exit 2
+      ;;
+    *) VERSION="$arg" ;;
+  esac
+done
+
+if [ -z "$VERSION" ]; then
+  echo "release: a version is required, e.g. ./scripts/release.sh 0.2.0" >&2
+  exit 2
+fi
+if ! printf '%s' "$VERSION" | grep -Eq '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'; then
+  echo "release: $VERSION is not X.Y.Z" >&2
+  exit 2
+fi
+
+# ---------------------------------------------------------------- preconditions
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "release: not a git repository (git init first; this script will not do it for you)" >&2
+  exit 2
+fi
+if [ -n "$(git status --porcelain)" ]; then
+  echo "release: the working tree is dirty; commit or stash first:" >&2
+  git status --short | head -10 >&2
+  exit 1
+fi
+
+CURRENT="$("$PY" -c 'import webscour; print(webscour.__version__)')"
+HIGHER="$("$PY" - "$CURRENT" "$VERSION" <<'PY'
+import sys
+def key(v):
+    return tuple(int(p) for p in v.split("."))
+print("yes" if key(sys.argv[2]) > key(sys.argv[1]) else "no")
+PY
+)"
+if [ "$HIGHER" != "yes" ]; then
+  echo "release: $VERSION is not higher than the current $CURRENT" >&2
+  exit 1
+fi
+
+echo "release: $CURRENT -> $VERSION"
+
+if [ "$DRY" -eq 1 ]; then
+  echo "release: --dry-run, stopping before any write"
+  echo "release: would run scripts/check.sh, stamp $VERSION, tag v$VERSION"
+  exit 0
+fi
+
+# ---------------------------------------------------------------- gate
+./scripts/check.sh || { echo "release: check.sh failed, nothing was changed" >&2; exit 1; }
+
+# ---------------------------------------------------------------- stamp the version
+"$PY" - "$VERSION" <<'PY'
+import json, pathlib, re, sys
+version = sys.argv[1]
+init = pathlib.Path("webscour/__init__.py")
+text = init.read_text(encoding="utf-8")
+text = re.sub(r'__version__\s*=\s*"[^"]+"', '__version__ = "%s"' % version, text, count=1)
+init.write_text(text, encoding="utf-8")
+for rel in ("package.json", "pi/package.json"):
+    path = pathlib.Path(rel)
+    if not path.exists():
+        continue
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if "version" in data:
+        data["version"] = version
+        path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+print("stamped %s" % version)
+PY
+
+# ---------------------------------------------------------------- changelog
+"$PY" - "$VERSION" <<'PY'
+"""Move the hand-written Unreleased notes into the new section, then prepend the generated one.
+
+The generated section comes from `git cliff` when it is installed; when it is not, the section
+says so, because a changelog that silently omits a release is worse than one that admits it.
+"""
+import datetime
+import pathlib
+import re
+import subprocess
+import sys
+
+version = sys.argv[1]
+today = datetime.date.today().isoformat()
+path = pathlib.Path("CHANGELOG.md")
+text = path.read_text(encoding="utf-8")
+
+head, _, rest = text.partition("## Unreleased")
+if not rest:
+    raise SystemExit("CHANGELOG.md has no '## Unreleased' section to release")
+body, _, tail = rest.partition("\n## ")
+notes = body.strip() or "_No hand-written notes for this release._"
+
+cliff = subprocess.run(["git", "cliff", "--unreleased", "--tag", "v%s" % version, "--strip", "all"],
+                       capture_output=True, text=True)
+if cliff.returncode == 0 and cliff.stdout.strip():
+    generated = cliff.stdout.strip()
+    source = "generated by git-cliff"
+else:
+    generated = "_No generated section: git-cliff is not installed on this machine._"
+    source = "git-cliff missing"
+
+section = "## Unreleased\n\nNewest first. Notes no commit message can carry go here.\n\n"\
+          "## %s - %s\n\n%s\n\n_%s_\n\n%s\n\n## " % (version, today, notes, source, generated)
+path.write_text(head + section + (tail.lstrip("\n") if tail else ""), encoding="utf-8")
+print("changelog: %s section written" % version)
+PY
+
+# ---------------------------------------------------------------- commit and tag
+git add -A
+git commit -q -m "chore(release): $VERSION"
+git tag -a "v$VERSION" -m "webscour $VERSION"
+echo "release: committed and tagged v$VERSION"
+echo
+echo "Not pushed, not published. Those are yours to run, deliberately:"
+echo "  git push origin HEAD && git push origin v$VERSION     # publishes the tag"
+echo "  ./scripts/check.sh && python3 -m twine upload dist/* # publishes to PyPI"
+echo
+echo "The tag triggers .github/workflows/release.yml, which publishes with PyPI trusted"
+echo "publishing: pushing the tag IS the publish. Read the workflow before you push."

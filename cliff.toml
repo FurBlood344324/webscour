@@ -1,0 +1,65 @@
+# git-cliff: how a release's changelog section is assembled.
+#
+# The 0.x rules are the whole point of this file. While the major version is 0 there is no
+# stable API to break, so `!` is a minor bump, not a major one: a 0.x project that jumps to
+# 1.0.0 because somebody marked a commit breaking has lied to every user who reads the version
+# as "same major, safe to upgrade". Breaking changes only become 1.0.0 when we say so.
+#
+#   fix:                    patch   (0.1.0 -> 0.1.1)
+#   feat:                   minor   (0.1.0 -> 0.2.0)
+#   perf:, refactor:, etc.  patch
+#   anything with `!`       minor   while major == 0
+#   anything with `!`       major   at 1.0.0 and after
+#
+# `scripts/release.sh` takes the version explicitly and appends a section built from this
+# template; it never invents a number.
+
+[changelog]
+header = """
+# Changelog
+
+The hand-written `## Unreleased` section below is for notes no commit message can carry: a
+decision, a caveat, a thing a user must know before upgrading. `scripts/release.sh` moves it
+into the new version's section and leaves a fresh empty one on top.
+"""
+body = """
+{% if version %}\
+## {{ version }} - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## Unreleased
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | upper_first }}
+{% for commit in commits %}
+- {% if commit.breaking %}**breaking:** {% endif %}\
+{% if commit.scope %}`{{ commit.scope }}`: {% endif %}\
+{{ commit.message | upper_first }}\
+{% endfor %}
+{% endfor %}\n
+"""
+trim = true
+render_always = true
+
+[git]
+conventional_commits = true
+filter_unconventional = false        # a plain commit is still work worth naming
+split_commits = false
+protect_breaking_commits = true
+filter_commits = false
+tag_pattern = "v[0-9].*"
+sort_commits = "oldest"
+commit_parsers = [
+  { message = "^feat", group = "Added" },
+  { message = "^fix", group = "Fixed" },
+  { message = "^perf", group = "Changed" },
+  { message = "^refactor", group = "Changed" },
+  { message = "^docs", group = "Documentation" },
+  { message = "^test", group = "Documentation", skip = true },
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^chore", group = "Changed" },
+  { message = "^ci", group = "Changed" },
+  { message = "^style", skip = true },
+]
+commit_preprocessors = [
+  { pattern = '\\s+\\(#\\d+\\)$', replace = "" },
+]

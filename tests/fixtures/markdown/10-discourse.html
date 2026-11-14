@@ -1,0 +1,900 @@
+<html><body><h1>Code, which operates outside of a notebook, fails when invoked within it</h1><div class="post"><p><strong>beedell.roke</strong></p><p>I am attempting to trial using a Jupyter Notebook to make some repetitive processes more convenient to conduct. However, as the undermentioned IPython Notebook source demonstrates, this has been unsuccessful:</p>
+<pre data-code-wrap="JSON"><code class="lang-JSON">{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "804bc4c5",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid decimal literal (93048999.py, line 9)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[1]\u001b[39m\u001b[32m, line 9\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31m$Int64 = 0L\u001b[39m\n             ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid decimal literal\n"
+     ]
+    }
+   ],
+   "source": [
+    "#!/usr/bin/env -S pwsh -File\n",
+    "$Object = [Ordered]@{}\n",
+    "@(\n",
+    "\t'ro.product.brand'\n",
+    "\t'ro.build.product'\n",
+    ") | ForEach-Object {\n",
+    "\t$Value = (adb shell \"getprop $_\").Trim()\n",
+    "\tIf ($Value) {\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object |\n",
+    "\tConvertTo-Json -Compress |\n",
+    "\tyq -P"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 3,
+   "id": "9910da30",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid decimal literal (830812845.py, line 11)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[3]\u001b[39m\u001b[32m, line 11\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31m$Int64 = 0L\u001b[39m\n             ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid decimal literal\n"
+     ]
+    }
+   ],
+   "source": [
+    "#!/usr/bin/env -S pwsh -File\n",
+    "$Object = [Ordered]@{}\n",
+    "@(\n",
+    "\t'ro.build.display.id'\n",
+    "\t'ro.build.fingerprint'\n",
+    "\t'ro.build.version.sdk'\n",
+    "\t'ro.build.version.sdk_full'\n",
+    ") | ForEach-Object {\n",
+    "\t$Value = (adb shell \"getprop $_\").Trim()\n",
+    "\tIf ($Value) {\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object |\n",
+    "\tConvertTo-Json -Compress |\n",
+    "\tyq -P"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "5abdb8a8",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "ename": "SyntaxError",
+     "evalue": "invalid decimal literal (3797982989.py, line 16)",
+     "output_type": "error",
+     "traceback": [
+      "  \u001b[36mCell\u001b[39m\u001b[36m \u001b[39m\u001b[32mIn[2]\u001b[39m\u001b[32m, line 16\u001b[39m\n\u001b[31m    \u001b[39m\u001b[31m$Int64 = 0L\u001b[39m\n             ^\n\u001b[31mSyntaxError\u001b[39m\u001b[31m:\u001b[39m invalid decimal literal\n"
+     ]
+    }
+   ],
+   "source": [
+    "#!/usr/bin/env -S pwsh -File\n",
+    "$Package = Read-Host\n",
+    "$DumpSys = adb shell \"dumpsys package $Package\"\n",
+    "$Object = [Ordered]@{}\n",
+    "@{\n",
+    "\tversionCode = 'versionCode=(\\d+)'\n",
+    "\tversionName = 'versionName=([^\\s]+)'\n",
+    "}.GetEnumerator() | ForEach-Object {\n",
+    "\t$Match = [RegEx]::Match(\n",
+    "\t\t$DumpSys,\n",
+    "\t\t$_.Value,\n",
+    "\t\t[System.Text.RegularExpressions.RegexOptions]::Multiline\n",
+    "\t)\n",
+    "\tIf ($Match.Success) {\n",
+    "\t\t$Value = $Match.Groups[1].Value\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_.Key] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object.installer = (\n",
+    "\tadb shell 'pm list packages -i' |\n",
+    "\t\tSelect-String \"^package:$([RegEx]::Escape($Package)) \" |\n",
+    "\t\tForEach-Object {\n",
+    "\t\t\t$_ -replace '^.*installer='\n",
+    "\t\t}\n",
+    ")\n",
+    "$Object |\n",
+    "\tConvertTo-JSON -Compress |\n",
+    "\tyq -P"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.15.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+</code></pre>
+<p>However, what is strange about this example is that each of those commands functions perfectly outside of the notebook:</p>
+<aside class="onebox githubissue github-onebox" data-onebox-src="https://github.com/ImranR98/Obtainium/issues/2889#issue-4277033575">
+    <header class="source github-onebox__header">
+  <span class="github-onebox__label" role="img" aria-label="Closed issue" title="Closed issue">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path></svg>
+    <span>Closed issue</span>
+  </span>
+    <a class="github-onebox__repo" href="https://github.com/ImranR98/Obtainium/issues/2889#issue-4277033575" target="_blank" rel="noopener nofollow ugc">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"></path></svg>
+      <span>ImranR98/Obtainium</span>
+    </a>
+</header>
+
+
+  <article class="onebox-body">
+    <div class="github-row" data-github-private-repo="false">
+  <div class="github-info-container">
+    <h4>
+      <a href="https://github.com/ImranR98/Obtainium/issues/2889#issue-4277033575" target="_blank" rel="noopener nofollow ugc">VC 23343 `SIGTRAP(TRAP_BRKPT)`'d, when it caused `google.android.webview` to.</a>
+    </h4>
+
+    <div class="github-info">
+      <div class="date">
+        opened <span class="discourse-local-date" data-format="ll" data-date="2026-04-16" data-time="16:17:22" data-timezone="UTC">04:17PM - 16 Apr 26 UTC</span>
+      </div>
+
+        <div class="date">
+          closed <span class="discourse-local-date" data-format="ll" data-date="2026-06-23" data-time="18:29:11" data-timezone="UTC">06:29PM - 23 Jun 26 UTC</span>
+        </div>
+
+      <div class="user">
+        <a href="https://github.com/beedell-roke" target="_blank" rel="noopener nofollow ugc">
+          <img alt="" src="https://avatars.githubusercontent.com/u/42837531?v=4" class="onebox-avatar-inline" width="20" height="20">
+          beedell-roke
+        </a>
+      </div>
+    </div>
+
+    <div class="labels">
+        <span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">
+          bug
+        </span>
+    </div>
+  </div>
+</div>
+
+  <div class="github-row">
+    <p class="github-body-container">#### A Description Of The Bug
+
+Whilst using Obtanium, it `SIGTRAP`'d (with a `TR<span class="show-more-container"><a href="" rel="noopener" class="show-more">…</a></span><span class="excerpt hidden">AP_BRKPT`) in `crashpad_client_linux.cc:744`:
+
+&lt;blockquote&gt;
+
+~~~YAML
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Build fingerprint: 'Fairphone/FP5/FP5:15/AQ3A.240912.001/VT2Q:user/release-keys'
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Revision: '0'
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: ABI: 'arm'
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Timestamp: 2026-04-15 18:24:50.210535218+0100
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Process uptime: 396s
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Cmdline: dev.imranr.obtainium
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: pid: 29010, tid: 29010, name: mranr.obtainium  &gt;&gt;&gt; dev.imranr.obtainium &lt;&lt;&lt;
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: uid: 10853
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: signal 5 (SIGTRAP), code 1 (TRAP_BRKPT), fault addr 0x813657d8
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: Abort message: '[FATAL:third_party/crashpad/crashpad/client/crashpad_client_linux.cc:744] Render process (29392)'s crash wasn't handled by all associated  webviews, triggering application crash.'
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG:     r0  00000000  r1  00000000  r2  00000001  r3  00000000
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG:     r4  ffc42728  r5  ffc42b58  r6  ffc42708  r7  83b974b8
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG:     r8  e8397a98  r9  00000016  r10 000000b2  r11 ffc42728
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG:     ip  83aead8c  sp  ffc426f8  lr  81355649  pc  813657d8
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: 34 total frames
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG: backtrace:
+2026-04-15 18:24:51.169 10853 2734 2734 dev.imranr.obtainium DEBUG:       #00 pc 024127d8  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #01 pc 021034df  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #02 pc 030c3571  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #03 pc 00e0e1b9  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #04 pc 0244736d  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #05 pc 02444dd3  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #06 pc 0303709f  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #07 pc 03037041  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #08 pc 021308f9  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xaca4000) (BuildId: 6eca69ffc2ae2af1a176d584d0b72f7561e8c061)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #09 pc 0000c5c9  /system/lib/libutils.so (android::Looper::pollInner(int)+1072) (BuildId: 61064723de0c8220ec4d883ad4b22a3b)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #10 pc 0000c13d  /system/lib/libutils.so (android::Looper::pollOnce(int, int*, int*, void**)+64) (BuildId: 61064723de0c8220ec4d883ad4b22a3b)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #11 pc 000fcb3d  /system/lib/libandroid_runtime.so (android::android_os_MessageQueue_nativePollOnce(_JNIEnv*, _jobject*, long long, int)+26) (BuildId: 4ec55e9b00ee9e2d2e56f71a621e0097)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #12 pc 00c66f07  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (art_jni_trampoline+78)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #13 pc 0088ef97  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (android.os.MessageQueue.next+230)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #14 pc 0088c3b3  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (android.os.Looper.loopOnce+74)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #15 pc 0088c2df  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (android.os.Looper.loop+678)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #16 pc 00665ddb  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (android.app.ActivityThread.main+2042)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #17 pc 000c17c5  /apex/com.android.art/lib/libart.so (art_quick_invoke_stub_internal+68) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #18 pc 006517f5  /apex/com.android.art/lib/libart.so (art_quick_invoke_static_stub+246) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #19 pc 0027ac39  /apex/com.android.art/lib/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+192) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #20 pc 0058272b  /apex/com.android.art/lib/libart.so (_jobject* art::InvokeMethod&lt;(art::PointerSize)4&gt;(art::ScopedObjectAccessAlreadyRunnable const&amp;, _jobject*, _jobject*, _jobject*, unsigned int)+1518) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #21 pc 0050a9d3  /apex/com.android.art/lib/libart.so (art::Method_invoke(_JNIEnv*, _jobject*, _jobject*, _jobjectArray*) (.__uniq.165753521025965369065708152063621506277)+22) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #22 pc 00c53849  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (art_jni_trampoline+56)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #23 pc 00b403ed  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run+116)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #24 pc 00b4948b  /data/misc/apexdata/com.android.art/dalvik-cache/arm/boot.oat (com.android.internal.os.ZygoteInit.main+3002)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #25 pc 000c17c5  /apex/com.android.art/lib/libart.so (art_quick_invoke_stub_internal+68) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #26 pc 006517f5  /apex/com.android.art/lib/libart.so (art_quick_invoke_static_stub+246) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #27 pc 0027ac39  /apex/com.android.art/lib/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+192) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.170 10853 2734 2734 dev.imranr.obtainium DEBUG:       #28 pc 00583f4d  /apex/com.android.art/lib/libart.so (art::JValue art::InvokeWithVarArgs&lt;_jmethodID*&gt;(art::ScopedObjectAccessAlreadyRunnable const&amp;, _jobject*, _jmethodID*, std::__va_list)+360) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.171 10853 2734 2734 dev.imranr.obtainium DEBUG:       #29 pc 00485f85  /apex/com.android.art/lib/libart.so (art::JNI&lt;true&gt;::CallStaticVoidMethodV(_JNIEnv*, _jclass*, _jmethodID*, std::__va_list)+472) (BuildId: 837a19e56f5dbbc3154a192cdf9ea8f8)
+2026-04-15 18:24:51.171 10853 2734 2734 dev.imranr.obtainium DEBUG:       #30 pc 00089cdb  /system/lib/libandroid_runtime.so (_JNIEnv::CallStaticVoidMethod(_jclass*, _jmethodID*, ...)+18) (BuildId: 4ec55e9b00ee9e2d2e56f71a621e0097)
+2026-04-15 18:24:51.171 10853 2734 2734 dev.imranr.obtainium DEBUG:       #31 pc 0009a2a1  /system/lib/libandroid_runtime.so (android::AndroidRuntime::start(char const*, android::Vector&lt;android::String8&gt; const&amp;, bool)+512) (BuildId: 4ec55e9b00ee9e2d2e56f71a621e0097)
+2026-04-15 18:24:51.171 10853 2734 2734 dev.imranr.obtainium DEBUG:       #32 pc 000026bb  /system/bin/app_process32 (main+1074) (BuildId: 6872a9ac947ee9fe3a4c4fb7a949952e)
+2026-04-15 18:24:51.171 10853 2734 2734 dev.imranr.obtainium DEBUG:       #33 pc 00035fa5  /apex/com.android.runtime/lib/bionic/libc.so (__libc_init+72) (BuildId: 90c6dcea613926b2c191bc7150cd5b87)
+~~~
+
+&lt;/blockquote&gt;
+
+#### How To Reproduce It
+
+Either I was adding an application to the list, or installing it. I believe, the former. I apologise for not being precise, but it occurred a few hours ago, when I wasn't able to file a report.
+
+#### My Environment
+
+-	#### Hardware
+
+	1.	&lt;p&gt;&lt;/p&gt;&lt;details&gt;&lt;p&gt;&lt;/p&gt;
+
+		~~~pwsh
+		#!/usr/bin/env -S pwsh -File
+		$Object = [Ordered]@{}
+		@(
+			'ro.product.brand'
+			'ro.build.product'
+		) | ForEach-Object {
+			$Value = (adb shell "getprop $_").Trim()
+			If ($Value) {
+				$Int64 = 0L
+				$Object[$_] =
+					If ([Long]::TryParse($Value, [Ref]$Int64)) {
+						$Int64
+					} Else {
+						$Value
+					}
+			}
+		}
+		$Object |
+			ConvertTo-Json -Compress |
+			yq -P
+		~~~
+
+		&lt;p&gt;&lt;/p&gt;&lt;/details&gt;&lt;p&gt;&lt;/p&gt;
+
+	1.	&lt;blockquote&gt;
+
+		~~~YAML
+		ro.product.brand: Fairphone
+		ro.build.product: FP5
+		~~~
+
+		&lt;/blockquote&gt;
+
+-	#### OS
+
+	1.	&lt;p&gt;&lt;/p&gt;&lt;details&gt;&lt;p&gt;&lt;/p&gt;
+
+		~~~pwsh
+		#!/usr/bin/env -S pwsh -File
+		$Object = [Ordered]@{}
+		@(
+			'ro.build.display.id'
+			'ro.build.fingerprint'
+			'ro.build.version.sdk'
+			'ro.build.version.sdk_full'
+		) | ForEach-Object {
+			$Value = (adb shell "getprop $_").Trim()
+			If ($Value) {
+				$Int64 = 0L
+				$Object[$_] =
+					If ([Long]::TryParse($Value, [Ref]$Int64)) {
+						$Int64
+					} Else {
+						$Value
+					}
+			}
+		}
+		$Object |
+			ConvertTo-Json -Compress |
+			yq -P
+		~~~
+
+		&lt;p&gt;&lt;/p&gt;&lt;/details&gt;&lt;p&gt;&lt;/p&gt;
+
+	1.	&lt;blockquote&gt;
+
+		~~~YAML
+		ro.build.display.id: FP5.VT2Q.C.092.20260330
+		ro.build.fingerprint: Fairphone/FP5/FP5:15/AQ3A.240912.001/VT2Q:user/release-keys
+		ro.build.version.sdk: 35
+		~~~
+
+		&lt;/blockquote&gt;
+
+-	#### Obtanium
+
+	1.	&lt;p&gt;&lt;/p&gt;&lt;details&gt;&lt;p&gt;&lt;/p&gt;
+
+		~~~pwsh
+		#!/usr/bin/env -S pwsh -File
+		$Package = 'dev.imranr.obtainium'
+		$DumpSys = adb shell "dumpsys package $Package"
+		$Object = [Ordered]@{}
+		@{
+			versionCode = 'versionCode=(\d+)'
+			versionName = 'versionName=([^\s]+)'
+		}.GetEnumerator() | ForEach-Object {
+			$Match = [RegEx]::Match(
+				$DumpSys,
+				$_.Value,
+				[System.Text.RegularExpressions.RegexOptions]::Multiline
+			)
+			If ($Match.Success) {
+				$Value = $Match.Groups[1].Value
+				$Int64 = 0L
+				$Object[$_.Key] =
+					If ([Long]::TryParse($Value, [Ref]$Int64)) {
+						$Int64
+					} Else {
+						$Value
+					}
+			}
+		}
+		$Object.installer = (
+			adb shell 'pm list packages -i' |
+				Select-String "^package:$([RegEx]::Escape($Package)) " |
+				ForEach-Object {
+					$_ -replace '^.*installer='
+				}
+		)
+		$Object |
+			ConvertTo-JSON -Compress |
+			yq -P
+		~~~
+
+		&lt;p&gt;&lt;/p&gt;&lt;/details&gt;&lt;p&gt;&lt;/p&gt;
+
+	1.	&lt;blockquote&gt;
+
+		~~~YAML
+		versionCode: 23343
+		versionName: 1.4.2
+		installer: com.machiav3lli.fdroid
+		~~~
+
+		&lt;/blockquote&gt;
+
+#### Additional Context
+
+`com.google.android.webview` also crashed:
+
+&lt;blockquote&gt;
+
+~~~YAML
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: Build fingerprint: 'Fairphone/FP5/FP5:15/AQ3A.240912.001/VT2Q:user/release-keys'
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: Revision: '0'
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: ABI: 'arm64'
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: Timestamp: 2026-04-15 18:24:47.758937771+0100
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: Process uptime: 375s
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: Cmdline: com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: pid: 29392, tid: 29403, name: CrRendererMain  &gt;&gt;&gt; com.google.android.webview:sandboxed_process0:org.chromium.content.app.SandboxedProcessService0:0 &lt;&lt;&lt;
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: uid: 99119
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: signal 5 (SIGTRAP), code 1 (TRAP_BRKPT), fault addr --------
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x0  00000071b4a13000  x1  00000000003ff000  x2  0000000000000000  x3  654d00737463656a
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x4  000000783afb834e  x5  0000007833e41525  x6  0000000065747962  x7  7f7f7f7f7f7f7f7f
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x8  00000000007fd000  x9  0000000000001007  x10 0000000000000000  x11 0000000000083d4e
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x12 0000000000000006  x13 3ffffffffffffff3  x14 0000000000000001  x15 000000007b9e9d3c
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x16 00000078445cdfc8  x17 000000783c3b1a20  x18 0000007832c2c000  x19 00000071b4a13000
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x20 0000000000400000  x21 00000000000003ff  x22 000000784470e000  x23 ffffffffffc03000
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x24 000000784470e250  x25 0000007400404680  x26 000000740047a800  x27 00000015aa11c23c
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     x28 0000007844604000  x29 0000007833e415f0
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:     lr  000000783ca6d27c  sp  0000007833e415f0  pc  000000783ca6d338  pst 0000000020001000
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: 32 total frames
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG: backtrace:
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #00 pc 0000000002260338  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #01 pc 0000000004602f50  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #02 pc 0000000004602db8  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #03 pc 0000000004687a28  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #04 pc 0000000004688908  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #05 pc 00000000046852ac  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #06 pc 0000000004571710  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #07 pc 0000000001ca52b8  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.804 99119 29392 29403 DEBUG:       #08 pc 0000000001ca32e0  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #09 pc 0000000001ca4b98  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #10 pc 0000000001ca7b34  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #11 pc 0000000001ca3128  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #12 pc 0000000001ca0150  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #13 pc 0000000001c9fa24  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #14 pc 0000000003846450  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #15 pc 000000000239f18c  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #16 pc 0000000001c31d84  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #17 pc 0000000001c3192c  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #18 pc 0000000001bf4cc4  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #19 pc 0000000001bf3188  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #20 pc 0000000001bd5318  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #21 pc 0000000001bbda60  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #22 pc 0000000001bbd770  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk!libwebviewchromium.so (offset 0xdec000) (BuildId: e03607c893209458565f8f0e185350448ca2b0a7)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #23 pc 0000000000df5854  /data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat (art_jni_trampoline+116)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #24 pc 00000000006683e8  /apex/com.android.art/lib64/libart.so (nterp_helper+152) (BuildId: a1fcb66a9fb3fa9071e8a42dcf9cd5ea)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #25 pc 00000000000cbc48  /data/app/~~BKWmaIDUmfKMClzxkOlehw==/com.google.android.webview-QHTYnimFdCRxJLFDrxUt7g==/base.apk
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #26 pc 000000000031e058  /data/misc/apexdata/com.android.art/dalvik-cache/arm64/boot.oat (java.lang.Thread.run+72)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #27 pc 00000000002aaf94  /apex/com.android.art/lib64/libart.so (art_quick_invoke_stub+612) (BuildId: a1fcb66a9fb3fa9071e8a42dcf9cd5ea)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #28 pc 00000000002708ec  /apex/com.android.art/lib64/libart.so (art::ArtMethod::Invoke(art::Thread*, unsigned int*, unsigned int, art::JValue*, char const*)+220) (BuildId: a1fcb66a9fb3fa9071e8a42dcf9cd5ea)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #29 pc 00000000004bdfe0  /apex/com.android.art/lib64/libart.so (art::Thread::CreateCallback(void*)+1184) (BuildId: a1fcb66a9fb3fa9071e8a42dcf9cd5ea)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #30 pc 000000000006d8d0  /apex/com.android.runtime/lib64/bionic/libc.so (__pthread_start(void*)+196) (BuildId: 64eb5106bc8ae51d575bce9d5c64cec5)
+2026-04-15 18:24:49.805 99119 29392 29403 DEBUG:       #31 pc 000000000005fd34  /apex/com.android.runtime/lib64/bionic/libc.so (__start_thread+68) (BuildId: 64eb5106bc8ae51d575bce9d5c64cec5)
+~~~
+
+&lt;/blockquote&gt;
+
+If this is the cause, I'll report it to Google Buganizer.</span></p>
+  </div>
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+
+<p>Why might this be so?</p>
+<p>My environment is as <code>[`stackoverflow.com/revisions/80016499/2`](https://stackoverflow.com/revisions/80016499/2#content:~:text=In%20cPE,pip,-My)</code> describes:</p>
+<ul><li><blockquote>
+<pre data-code-wrap="YAML"><code class="lang-YAML">Name: python3.15
+Version: 3.15.2
+Release: 1.fc44
+Buildtime: 1793096508
+Buildhost: buildhw-x86-16.rdu3.fedoraproject.org
+Installtime: 1793884028
+Size: 29310
+Distribution: Fedora Project
+Vendor: Fedora Project
+License: Python-2.0.1
+Packager: Fedora Project
+</code></pre>
+</blockquote></li><li>
+<aside class="onebox allowlistedgeneric" data-onebox-src="https://github.com/PowerShell/PowerShell/discussions/20322#discussioncomment-19588329">
+  <header class="source">
+      <img src="https://github.githubassets.com/favicons/favicon.svg" class="site-icon" alt="" width="32" height="32">
+
+      <a href="https://github.com/PowerShell/PowerShell/discussions/20322#discussioncomment-19588329" target="_blank" rel="noopener nofollow ugc">GitHub</a>
+  </header>
+
+  <article class="onebox-body">
+    <div class="aspect-image" style="--aspect-ratio:690/344;"><img src="https://opengraph.githubassets.com/e54aba3539d43dccdff742a61b6d8d770646a7077dd19a537a944fc45f808d60/PowerShell/PowerShell/discussions/20322" class="thumbnail" alt="" width="690" height="345"></div>
+
+<h3><a href="https://github.com/PowerShell/PowerShell/discussions/20322#discussioncomment-19588329" target="_blank" rel="noopener nofollow ugc">$False - Why does `Get-ChildItem` arbitrarily limit its width? · PowerShell...</a></h3>
+
+  <p>#!/usr/bin/env -S pwsh -File #Requires -PSEdition Core Get-ChildItem "$Home/.local/share/Steam/steamapps/common/Terraria/Content/Images/Backgrounds/" 1 …outputs: PS /home/beedell.roke_julian_lockha...</p>
+
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+
+</li></ul>
+<p>I invoke it via:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/original/3X/2/4/24d0bad71b21f7312cc6fb978706c96e525bfae7.png" data-download-href="/uploads/short-url/5fGodkPId859G5JTGIzzbdVYNZd.png?dl=1" title="A Screenshot" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/4/24d0bad71b21f7312cc6fb978706c96e525bfae7_2_459x500.png" alt="A Screenshot" data-base62-sha1="5fGodkPId859G5JTGIzzbdVYNZd" width="459" height="500" srcset="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/4/24d0bad71b21f7312cc6fb978706c96e525bfae7_2_459x500.png, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/4/24d0bad71b21f7312cc6fb978706c96e525bfae7_2_688x750.png 1.5x, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/4/24d0bad71b21f7312cc6fb978706c96e525bfae7_2_918x1000.png 2x" data-dominant-color="222324"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">A Screenshot</span><span class="informations">1276×1388 162 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div></p>
+<p>BTW, that proposed correction is incorrect.</p></div><div class="post"><p><strong>fomightez</strong></p><aside class="quote no-group" data-username="beedell.roke" data-post="1" data-topic="39125">
+<div class="title">
+<div class="quote-controls"></div>
+<img alt="" width="24" height="24" src="https://yyz1.discourse-cdn.com/flex031/user_avatar/discourse.jupyter.org/beedell.roke/48/22938_2.png" class="avatar"> beedell.roke:</div>
+<blockquote>
+<p>I invoke it via</p>
+</blockquote>
+</aside>
+<p>So the screenshot you show at the bottom has in the upper right the kernel you are using as ‘<code>Python 3.15.2</code>’, I think. (I only ever use actual Jupyter that show ipkernel so I am guessing a bit there, but what I see for the errors is consistent.)<br>
+However, that code in the cell isn’t Python. So it won’t work and is saying <code>SyntaxError: invalid decimal literal</code>, etc.. From the text of what you provided as your notebook in the code block at the tiop, from the medata it looks like you’d want <code>"languageId": "powershell"</code>. I don’t know if that is a common kernel. I have used the Bash kernel. And more often than not, it is easier to run bash commands in ipykernel notebooks with the <code>%%bash</code> cell magic (see <a href="https://ipython.readthedocs.io/en/stable/interactive/magics.html#cellmagic-bash">here</a>) or subprocess. I don’t use powershell at all so I cannot tell you if there is an equivalent. I think you can to some extent because of the answer to <a href="https://stackoverflow.com/a/70604096/8508004">Executing Windows PowerShell commands in a Jupyter Notebook</a>.</p>
+<p>See also:</p>
+<ul>
+<li><a href="https://discourse.jupyter.org/t/powershell-in-jupyter-notebook/31629/2" class="inline-onebox">PowerShell in Jupyter Notebook - #2 by krassowski</a></li>
+<li><a href="https://stackoverflow.com/a/70604096/8508004">Executing Windows PowerShell commands in a Jupyter Notebook</a></li>
+</ul></div><div class="post"><p><strong>beedell.roke</strong></p><p><a class="mention" href="/u/fomightez">@fomightez</a>, indeed. That appears to be problem:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/original/3X/2/9/296705bde122f7402f0164627e46566966f2e6ef.png" data-download-href="/uploads/short-url/5UgiEmHGgZfHnYfLKroHlfX8Zf9.png?dl=1" title="A Screenshot" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/9/296705bde122f7402f0164627e46566966f2e6ef_2_690x374.png" alt="A Screenshot" data-base62-sha1="5UgiEmHGgZfHnYfLKroHlfX8Zf9" width="690" height="374" srcset="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/9/296705bde122f7402f0164627e46566966f2e6ef_2_690x374.png, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/2/9/296705bde122f7402f0164627e46566966f2e6ef_2_1035x561.png 1.5x, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/original/3X/2/9/296705bde122f7402f0164627e46566966f2e6ef.png 2x" data-dominant-color="202223"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">A Screenshot</span><span class="informations">1276×693 64.3 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div></p>
+<p>I have, since, solved it, with <code>%%script powershell-preview -NoProfile -NonInteractive -Command "&amp; ([scriptblock]::Create([Console]::In.ReadToEnd()))"</code> prepended.</p>
+<details>
+<pre data-code-wrap="JSON"><code class="lang-JSON">{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 24,
+   "id": "804bc4c5",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ro.product.brand: Fairphone\n",
+      "ro.build.product: FP5\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%script powershell-preview -NoProfile -NonInteractive -Command \"&amp; ([scriptblock]::Create([Console]::In.ReadToEnd()))\"\n",
+    "#!/usr/bin/env -S powershell-preview -File\n",
+    "$Object = [Ordered]@{}\n",
+    "@(\n",
+    "\t'ro.product.brand'\n",
+    "\t'ro.build.product'\n",
+    ") | ForEach-Object {\n",
+    "\t$Value = (adb shell \"getprop $_\").Trim()\n",
+    "\tIf ($Value) {\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object |\n",
+    "\tConvertTo-Json -Compress |\n",
+    "\tyq -P\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": null,
+   "id": "9910da30",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "ro.build.display.id: FP5.VT32.C.116.20260903\n",
+      "ro.build.fingerprint: Fairphone/FP5/FP5:15/AQ3A.240912.001/VT32:user/release-keys\n",
+      "ro.build.version.sdk: 35\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%script powershell-preview -NoProfile -NonInteractive -Command \"&amp; ([scriptblock]::Create([Console]::In.ReadToEnd()))\"\n",
+    "#!/usr/bin/env -S powershell-preview -File\n",
+    "$Object = [Ordered]@{}\n",
+    "@(\n",
+    "\t'ro.build.display.id'\n",
+    "\t'ro.build.fingerprint'\n",
+    "\t'ro.build.version.sdk'\n",
+    "\t'ro.build.version.sdk_full'\n",
+    ") | ForEach-Object {\n",
+    "\t$Value = (adb shell \"getprop $_\").Trim()\n",
+    "\tIf ($Value) {\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object |\n",
+    "\tConvertTo-Json -Compress |\n",
+    "\tyq -P\n"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "5abdb8a8",
+   "metadata": {
+    "vscode": {
+     "languageId": "powershell"
+    }
+   },
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "versionName: 15\n",
+      "versionCode: 35\n",
+      "installer: \"null\"\n"
+     ]
+    }
+   ],
+   "source": [
+    "%%script powershell-preview -NoProfile -NonInteractive -Command \"&amp; ([scriptblock]::Create([Console]::In.ReadToEnd()))\"\n",
+    "#!/usr/bin/env -S powershell-preview -File\n",
+    "$Package = \"com.android.settings\"\n",
+    "$DumpSys = adb shell \"dumpsys package $Package\"\n",
+    "$Object = [Ordered]@{}\n",
+    "@{\n",
+    "\tversionCode = 'versionCode=(\\d+)'\n",
+    "\tversionName = 'versionName=([^\\s]+)'\n",
+    "}.GetEnumerator() | ForEach-Object {\n",
+    "\t$Match = [RegEx]::Match(\n",
+    "\t\t$DumpSys,\n",
+    "\t\t$_.Value,\n",
+    "\t\t[System.Text.RegularExpressions.RegexOptions]::Multiline\n",
+    "\t)\n",
+    "\tIf ($Match.Success) {\n",
+    "\t\t$Value = $Match.Groups[1].Value\n",
+    "\t\t$Int64 = 0L\n",
+    "\t\t$Object[$_.Key] =\n",
+    "\t\t\tIf ([Long]::TryParse($Value, [Ref]$Int64)) {\n",
+    "\t\t\t\t$Int64\n",
+    "\t\t\t} Else {\n",
+    "\t\t\t\t$Value\n",
+    "\t\t\t}\n",
+    "\t}\n",
+    "}\n",
+    "$Object.installer = (\n",
+    "\tadb shell 'pm list packages -i' |\n",
+    "\t\tSelect-String \"^package:$([RegEx]::Escape($Package)) \" |\n",
+    "\t\tForEach-Object {\n",
+    "\t\t\t$_ -replace '^.*installer='\n",
+    "\t\t}\n",
+    ")\n",
+    "$Object |\n",
+    "\tConvertTo-JSON -Compress |\n",
+    "\tyq -P\n"
+   ]
+  }
+ ],
+ "metadata": {
+  "kernelspec": {
+   "display_name": "Python 3",
+   "language": "python",
+   "name": "python3"
+  },
+  "language_info": {
+   "codemirror_mode": {
+    "name": "ipython",
+    "version": 3
+   },
+   "file_extension": ".py",
+   "mimetype": "text/x-python",
+   "name": "python",
+   "nbconvert_exporter": "python",
+   "pygments_lexer": "ipython3",
+   "version": "3.15.2"
+  }
+ },
+ "nbformat": 4,
+ "nbformat_minor": 5
+}
+</code></pre>
+</details>
+<p>To demonstrate:</p>
+<p><div class="lightbox-wrapper"><a class="lightbox" href="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/original/3X/6/c/6c002c8535bb83b3b4f89a906f6ff4eddf20f879.png" data-download-href="/uploads/short-url/fppWf4f3sTUYOrjiqGreiybBWIx.png?dl=1" title="A Screenshot" rel="noopener nofollow ugc"><img src="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/6/c/6c002c8535bb83b3b4f89a906f6ff4eddf20f879_2_459x500.png" alt="A Screenshot" data-base62-sha1="fppWf4f3sTUYOrjiqGreiybBWIx" width="459" height="500" srcset="https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/6/c/6c002c8535bb83b3b4f89a906f6ff4eddf20f879_2_459x500.png, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/6/c/6c002c8535bb83b3b4f89a906f6ff4eddf20f879_2_688x750.png 1.5x, https://canada1.discourse-cdn.com/flex031/uploads/jupyter/optimized/3X/6/c/6c002c8535bb83b3b4f89a906f6ff4eddf20f879_2_918x1000.png 2x" data-dominant-color="212324"><div class="meta"><svg class="fa d-icon d-icon-far-image svg-icon" aria-hidden="true"><use href="#far-image"></use></svg><span class="filename">A Screenshot</span><span class="informations">1282×1396 181 KB</span><svg class="fa d-icon d-icon-discourse-expand svg-icon" aria-hidden="true"><use href="#discourse-expand"></use></svg></div></a></div></p>
+<p>This may have been multiple problems compounded:</p>
+<aside class="onebox githubissue github-onebox" data-onebox-src="https://github.com/PowerShell/PowerShell/issues/21644#issuecomment-6862741748">
+    <header class="source github-onebox__header">
+  <span class="github-onebox__label" role="img" aria-label="Open issue" title="Open issue">
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path fill-rule="evenodd" d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z"></path></svg>
+    <span>Open issue</span>
+  </span>
+    <a class="github-onebox__repo" href="https://github.com/PowerShell/PowerShell/issues/21644#issuecomment-6862741748" target="_blank" rel="noopener nofollow ugc">
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M6.766 11.328c-2.063-.25-3.516-1.734-3.516-3.656 0-.781.281-1.625.75-2.188-.203-.515-.172-1.609.063-2.062.625-.078 1.468.25 1.968.703.594-.187 1.219-.281 1.985-.281.765 0 1.39.094 1.953.265.484-.437 1.344-.765 1.969-.687.218.422.25 1.515.046 2.047.5.593.766 1.39.766 2.203 0 1.922-1.453 3.375-3.547 3.64.531.344.89 1.094.89 1.954v1.625c0 .468.391.734.86.547C13.781 14.359 16 11.53 16 8.03 16 3.61 12.406 0 7.984 0 3.563 0 0 3.61 0 8.031a7.88 7.88 0 0 0 5.172 7.422c.422.156.828-.125.828-.547v-1.25c-.219.094-.5.156-.75.156-1.031 0-1.64-.562-2.078-1.609-.172-.422-.36-.672-.719-.719-.187-.015-.25-.093-.25-.187 0-.188.313-.328.625-.328.453 0 .844.281 1.25.86.313.452.64.655 1.031.655s.641-.14 1-.5c.266-.265.47-.5.657-.656"></path></svg>
+      <span>PowerShell/PowerShell</span>
+    </a>
+</header>
+
+
+  <article class="onebox-body">
+    <div class="github-row" data-github-private-repo="false">
+  <div class="github-info-container">
+    <h4>
+      <a href="https://github.com/PowerShell/PowerShell/issues/21644#issuecomment-6862741748" target="_blank" rel="noopener nofollow ugc">(some) command read from stdin seem to require extra trailing newline</a>
+    </h4>
+
+    <div class="github-info">
+      <div class="date">
+        opened <span class="discourse-local-date" data-format="ll" data-date="2024-05-08" data-time="13:24:40" data-timezone="UTC">01:24PM - 08 May 24 UTC</span>
+      </div>
+
+
+      <div class="user">
+        <a href="https://github.com/philcerf" target="_blank" rel="noopener nofollow ugc">
+          <img alt="" src="https://avatars.githubusercontent.com/u/41550983?v=4" class="onebox-avatar-inline" width="20" height="20">
+          philcerf
+        </a>
+      </div>
+    </div>
+
+    <div class="labels">
+        <span style="display:inline-block;margin-top:2px;background-color: #B8B8B8;padding: 2px;border-radius: 4px;color: #fff;margin-left: 3px;">
+          Needs-Triage
+        </span>
+    </div>
+  </div>
+</div>
+
+  <div class="github-row">
+    <p class="github-body-container">### Prerequisites
+
+- [X] Write a descriptive title.
+- [X] Make sure you are a<span class="show-more-container"><a href="" rel="noopener" class="show-more">…</a></span><span class="excerpt hidden">ble to repro it on the [latest released version](https://github.com/PowerShell/PowerShell/releases)
+- [X] Search the existing issues.
+- [X] Refer to the [FAQ](https://github.com/PowerShell/PowerShell/blob/master/docs/FAQ.md).
+- [X] Refer to [Differences between Windows PowerShell 5.1 and PowerShell](https://learn.microsoft.com/powershell/scripting/whats-new/differences-from-windows-powershell).
+
+### Steps to reproduce
+
+I see the following in current PowerShell versions back to the days of `powershell.exe`.
+
+Having the following files:
+```
+$ xxd lf.ps1 
+00000000: 4765 742d 5072 6f63 6573 7320 7c0a 5768  Get-Process |.Wh
+00000010: 6572 652d 4f62 6a65 6374 207b 245f 2e4e  ere-Object {$_.N
+00000020: 616d 6520 2d49 4c69 6b65 2027 2a65 7870  ame -ILike '*exp
+00000030: 6c6f 7265 722a 277d 0a                   lorer*'}.
+```
+```
+$ xxd crlf.ps1 
+00000000: 4765 742d 5072 6f63 6573 7320 7c0d 0a57  Get-Process |..W
+00000010: 6865 7265 2d4f 626a 6563 7420 7b24 5f2e  here-Object {$_.
+00000020: 4e61 6d65 202d 494c 696b 6520 272a 6578  Name -ILike '*ex
+00000030: 706c 6f72 6572 2a27 7d0d 0a              plorer*'}..
+```
+(i.e. happens with both, LF and CRLF newlines)
+
+and executing them via `-File` works as expected:
+```
+$ pwsh -File lf.ps1 
+
+ NPM(K)    PM(M)      WS(M)     CPU(s)      Id  SI ProcessName
+ ------    -----      -----     ------      --  -- -----------
+     73    41,08     108,07       8,95    3772   4 explorer
+
+```
+```
+$ pwsh -File crlf.ps1 
+
+ NPM(K)    PM(M)      WS(M)     CPU(s)      Id  SI ProcessName
+ ------    -----      -----     ------      --  -- -----------
+     73    41,08     108,07       8,95    3772   4 explorer
+
+```
+
+But If I do the same from stdin:
+```
+$ pwsh -Command - &lt;lf.ps1 
+```
+```
+$ pwsh -Command - &lt;crlf.ps1 
+```
+there's no output at all and the exit code is still `0`.
+
+**It does suddenly work, if I add another trailing newline (either LF or CRLF) at the end of the file.**
+
+What also works is:
+```
+$ pwsh -Command "Get-Process | 
+Where-Object {\$_.Name -ILike '*explorer*'}"
+```
+This is executed from `bash`, and the string passed as argv to `-Command` contains a LF newline, i.e. binary it looks like:
+```
+$ printf '%s' "Get-Process | 
+Where-Object {\$_.Name -ILike '*explorer*'}" | xxd 
+00000000: 4765 742d 5072 6f63 6573 7320 7c20 0a57  Get-Process | .W
+00000010: 6865 7265 2d4f 626a 6563 7420 7b24 5f2e  here-Object {$_.
+00000020: 4e61 6d65 202d 494c 696b 6520 272a 6578  Name -ILike '*ex
+00000030: 706c 6f72 6572 2a27 7d                   plorer*'}
+```
+So if the command is given as string, it works even without terminating newline for the last line.
+
+
+Any ideas why it doesn't work when reading the command from stdin?
+
+btw: I do the this on Windows and invoking Cygwin.
+
+Thanks,
+Philippe
+
+### Expected behavior
+
+```console
+Should execute the command.
+```
+
+
+### Actual behavior
+
+```console
+Doesn't execute the command, or at least produces no output.
+```
+
+
+### Error details
+
+_No response_
+
+### Environment data
+
+```powershell
+$ echo "$PSVersionTable" | pwsh -Command -
+```
+gives no output either ;-)
+```
+
+
+### Visuals
+
+_No response_</span></p>
+  </div>
+
+  </article>
+
+  <div class="onebox-metadata">
+    
+    
+  </div>
+
+  <div style="clear: both"></div>
+</aside>
+</div></body></html>

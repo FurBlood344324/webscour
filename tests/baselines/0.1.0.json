@@ -1,0 +1,64 @@
+{
+ "pages": [
+  {
+   "bytes": 27340,
+   "lines": 132,
+   "prec": 0.882,
+   "traf_bytes": 26384,
+   "traf_lines": 124,
+   "url": "https://en.wikipedia.org/wiki/Web_scraping",
+   "visible": 30981,
+   "vs_traf": 1.036
+  },
+  {
+   "bytes": 3442,
+   "lines": 56,
+   "prec": 0.706,
+   "traf_bytes": 3096,
+   "traf_lines": 47,
+   "url": "https://arxiv.org/abs/1706.03762",
+   "visible": 4876,
+   "vs_traf": 1.112
+  },
+  {
+   "bytes": 358,
+   "lines": 8,
+   "prec": 0.76,
+   "traf_bytes": 354,
+   "traf_lines": 62,
+   "url": "https://news.ycombinator.com/item?id=1",
+   "visible": 471,
+   "vs_traf": 1.011
+  },
+  {
+   "bytes": 4163,
+   "lines": 97,
+   "prec": 0.323,
+   "traf_bytes": 3976,
+   "traf_lines": 73,
+   "url": "https://github.com/simonw/llm",
+   "visible": 12907,
+   "vs_traf": 1.047
+  },
+  {
+   "bytes": 11952,
+   "lines": 197,
+   "prec": 0.83,
+   "traf_bytes": 11785,
+   "traf_lines": 298,
+   "url": "https://react.dev/learn",
+   "visible": 14398,
+   "vs_traf": 1.014
+  },
+  {
+   "bytes": 4061,
+   "lines": 94,
+   "prec": 0.983,
+   "traf_bytes": 4130,
+   "traf_lines": 422,
+   "url": "https://news.ycombinator.com/",
+   "visible": 4130,
+   "vs_traf": 0.983
+  }
+ ]
+}

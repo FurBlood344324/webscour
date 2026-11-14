@@ -1,0 +1,123 @@
+# Serves `install.sh` at https://wsc.ashina.live/install.sh.
+#
+# The file at the repository root is the single source: the job copies that one file into
+# `_site/`, so there is no second copy that can drift from it, and every push to main that
+# touches it republishes the same bytes. Nothing third party sits in the path: curl talks to
+# GitHub Pages directly.
+#
+# Three one-time manual steps, which this file cannot do for you:
+#
+#   1. DNS: a CNAME record on `wsc` pointing at `<user>.github.io` (here:
+#      `FurBlood344324.github.io`). The apex domain is unrelated; only this subdomain matters.
+#   2. Repository settings -> Pages -> Source: "GitHub Actions". Not "Deploy from a branch":
+#      this workflow uploads an artifact instead of committing a build output.
+#   3. Repository settings -> Pages -> Custom domain: `wsc.ashina.live`. Run step 1 first: docs
+#      say to claim the domain here before pointing DNS at GitHub, or a stranger can claim the
+#      subdomain. With an Actions workflow the `CNAME` file in the artifact is ignored (GitHub
+#      keeps the domain in Settings, not in a file); it is written anyway because it costs one
+#      line and makes the intended domain readable in the artifact.
+#
+# Content type, stated plainly because it is not what one would want: GitHub Pages derives it
+# from the file extension and offers no way to override it (no `_headers`, no per-file rule). A
+# `.sh` file is served as `application/x-sh`. `text/plain` would need the path to end in `.txt`,
+# and the path is fixed by the one-liner. Both are text: `curl | sh` does not look at the type.
+# Confirmed against a live Pages-hosted installer (pkg.lightpanda.io/install.sh -> x-sh) and
+# against Jekyll's mime.types, which maps `sh` to `application/x-sh`. The verify step below
+# prints the type it actually got and fails on a non-text one, so nobody has to trust this note.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - install.sh
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+# Pages needs all three: read the repo, write the deployment, and mint the OIDC token that
+# proves to Pages which workflow is deploying.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Do not cancel a run in progress: a half-finished deployment is
+# worse than a queued one, and the newer artifact replaces it anyway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: publish install.sh
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      # Pinned majors, the same shape as ci.yml: checkout 5, configure-pages 6 (node24),
+      # upload-pages-artifact 4, deploy-pages 5 (node24). The artifact contract between the
+      # last two is "an artifact named github-pages holding one gzipped tar", which both keep.
+      - uses: actions/checkout@v5
+
+      - uses: actions/configure-pages@v6
+
+      # No build step and no template: two files, both copied verbatim. If this grows a
+      # generator, the installer stops being the thing that is served.
+      - name: build _site
+        run: |
+          set -eu
+          mkdir -p _site
+          cp install.sh _site/install.sh
+          printf '%s\n' 'wsc.ashina.live' > _site/CNAME
+          test -s _site/install.sh
+          # A guard, not decoration: the served file must still name this domain, and the
+          # installer must still refuse to run as root. A truncated copy would pass `test -s`.
+          grep -q 'wsc\.ashina\.live/install\.sh' _site/install.sh
+          grep -q 'refusing to run as root' _site/install.sh
+          diff -q install.sh _site/install.sh
+
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: deploy
+        id: deploy
+        uses: actions/deploy-pages@v5
+
+      # The deploy step proves an upload happened, not that the domain serves this file. These
+      # two facts are what the one-liner depends on: the domain answers, and it answers with the
+      # exact bytes of this commit. On the very first run, before the two manual steps above are
+      # done, this step fails on purpose: a green Pages deploy that the domain does not serve
+      # would be a lie about the installer being published.
+      - name: check the domain serves this file
+        env:
+          PAGE_URL: ${{ steps.deploy.outputs.page_url }}
+        run: |
+          set -eu
+          url='https://wsc.ashina.live/install.sh'
+          code=''
+          for _ in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /tmp/served.sh -w '%{http_code}' --max-time 20 "$url" || true)
+            if [ "$code" = 200 ]; then break; fi
+            sleep 10
+          done
+          if [ "${code:-}" != 200 ]; then
+            echo "::error::$url answered ${code:-nothing}. Check the DNS CNAME and that Pages is set to GitHub Actions. Deployed page_url: $PAGE_URL"
+            exit 1
+          fi
+          # The body, byte for byte. This is the property worth failing on: a stale or edited
+          # copy at the domain is worse than an outage, because `curl | sh` would run it.
+          if ! diff -q install.sh /tmp/served.sh; then
+            echo "::error::$url does not match install.sh in this commit"
+            exit 1
+          fi
+          ctype=$(curl -sSI --max-time 20 "$url" | tr -d '\r' | sed -n 's/^[Cc]ontent-[Tt]ype: *//p' | head -n 1)
+          echo "content-type: ${ctype:-unknown} (application/x-sh is what Pages does for a .sh path)"
+          case ${ctype:-} in
+            text/plain* | application/x-sh* | text/x-sh*) : ;;
+            *)
+              echo "::error::$url is served as '${ctype:-unknown}', which is not a shell text type; the one-liner would not pipe it into sh"
+              exit 1
+              ;;
+          esac
