@@ -1,9 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="webscour">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="webscour">
   <title>webscour</title>
+  <!-- A page of cells, combed clean along one diagonal. Four cells on that diagonal are drawn as
+       blades instead of blocks, which is the whole idea: the grid is what is being read, the
+       diagonal is what is scraping it. No text, no gradient, no rounded corner. -->
   <g fill="#1f2328">
-    <rect x="1" y="1" width="13" height="13"/>
-    <rect x="18" y="1" width="13" height="13"/>
-    <rect x="1" y="18" width="13" height="13"/>
+    <rect x="4" y="36" width="24" height="24"/>
+    <rect x="4" y="68" width="24" height="24"/>
+    <rect x="4" y="100" width="24" height="24"/>
+    <rect x="36" y="4" width="24" height="24"/>
+    <rect x="36" y="68" width="24" height="24"/>
+    <rect x="36" y="100" width="24" height="24"/>
+    <rect x="68" y="4" width="24" height="24"/>
+    <rect x="68" y="36" width="24" height="24"/>
+    <rect x="68" y="100" width="24" height="24"/>
+    <rect x="100" y="4" width="24" height="24"/>
+    <rect x="100" y="36" width="24" height="24"/>
+    <rect x="100" y="68" width="24" height="24"/>
   </g>
-  <path d="M18.9 30.9 L30.9 18.9" fill="none" stroke="#1f2328" stroke-width="5.2"/>
+  <g stroke="#1f2328" stroke-width="7" stroke-linecap="butt" fill="none">
+    <path d="M4 26 L26 4"/>
+    <path d="M36 58 L58 36"/>
+    <path d="M68 90 L90 68"/>
+    <path d="M100 122 L122 100"/>
+  </g>
 </svg>
