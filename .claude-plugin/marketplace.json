@@ -7,7 +7,11 @@
   "plugins": [
     {
       "name": "webscour",
-      "source": "./skill",
+      "source": {
+        "source": "git-subdir",
+        "url": "https://github.com/FurBlood344324/webscour.git",
+        "path": "skill"
+      },
       "description": "Teaches the agent when to reach for the wsc CLI (search, fetch, pdf, map, crawl) and what its privacy rule is.",
       "skills": [
         "."

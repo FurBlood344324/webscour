@@ -15,6 +15,13 @@ asked for credentials that it deliberately does not have.
   wordmark drawn as paths has to be redrawn whenever the name changes, and a README already says
   the name one line below the picture. The mark files are the whole identity now.
 
+### Changed
+
+- The Claude Code marketplace is served from `https://wsc.ashina.live/marketplace.json`, the same
+  domain as the installer, so the install line carries no account name. The plugin source is
+  `git-subdir` (the documented type for a plugin in a repository subdirectory), which mounts
+  `skill/` without cloning the tool's Python.
+
 ### Added
 
 - A Claude Code section for the MCP server (`claude mcp add webscour -- wsc mcp`), which existed in

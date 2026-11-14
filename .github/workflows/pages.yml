@@ -1,4 +1,4 @@
-# Serves `install.sh` at https://wsc.ashina.live/install.sh.
+# Serves `install.sh` and `marketplace.json` at https://wsc.ashina.live/.
 #
 # The file at the repository root is the single source: the job copies that one file into
 # `_site/`, so there is no second copy that can drift from it, and every push to main that
@@ -31,6 +31,7 @@ on:
     branches: [main]
     paths:
       - install.sh
+      - .claude-plugin/marketplace.json
       - .github/workflows/pages.yml
   workflow_dispatch:
 
@@ -70,12 +71,33 @@ jobs:
           mkdir -p _site
           cp install.sh _site/install.sh
           printf '%s\n' 'wsc.ashina.live' > _site/CNAME
+
+          # The marketplace file is published from this domain so that the install line carries no
+          # owner name: `claude plugin marketplace add https://wsc.ashina.live/marketplace.json`
+          # resolves the plugin, and only this file mentions where the git repo lives. It is copied
+          # verbatim from .claude-plugin/ for the same reason install.sh is copied: one source.
+          cp .claude-plugin/marketplace.json _site/marketplace.json
+
           test -s _site/install.sh
           # A guard, not decoration: the served file must still name this domain, and the
           # installer must still refuse to run as root. A truncated copy would pass `test -s`.
           grep -q 'wsc\.ashina\.live/install\.sh' _site/install.sh
           grep -q 'refusing to run as root' _site/install.sh
           diff -q install.sh _site/install.sh
+
+          # The marketplace must stay parseable and name a real plugin directory, or `claude
+          # plugin marketplace add` fails at the user's machine with a worse message than this.
+          python3 - <<'PYEOF'
+          import json, os, sys
+          m = json.load(open("_site/marketplace.json"))
+          if not m.get("name"):
+              sys.exit("marketplace.json has no name")
+          for plugin in m.get("plugins", []):
+              src = str(plugin.get("source", "")).lstrip("./")
+              if src and not os.path.isdir(src) and not src.endswith(".git"):
+                  sys.exit("marketplace plugin %r points at %r, which is not a directory here" % (plugin.get("name"), src))
+          print("marketplace.json: %s, %d plugin(s)" % (m["name"], len(m.get("plugins", []))))
+          PYEOF
 
       - uses: actions/upload-pages-artifact@v4
         with:
@@ -90,6 +112,26 @@ jobs:
       # exact bytes of this commit. On the very first run, before the two manual steps above are
       # done, this step fails on purpose: a green Pages deploy that the domain does not serve
       # would be a lie about the installer being published.
+      - name: check the domain serves the marketplace too
+        run: |
+          set -eu
+          url='https://wsc.ashina.live/marketplace.json'
+          code=''
+          for _ in 1 2 3 4 5 6; do
+            code=$(curl -sS -o /tmp/served.json -w '%{http_code}' --max-time 20 "$url" || true)
+            if [ "$code" = 200 ]; then break; fi
+            sleep 10
+          done
+          if [ "${code:-}" != 200 ]; then
+            echo "::error::$url answered ${code:-nothing}"
+            exit 1
+          fi
+          if ! diff -q .claude-plugin/marketplace.json /tmp/served.json; then
+            echo "::error::$url does not match .claude-plugin/marketplace.json in this commit"
+            exit 1
+          fi
+          python3 -c "import json;print('served marketplace name:', json.load(open('/tmp/served.json'))['name'])"
+
       - name: check the domain serves this file
         env:
           PAGE_URL: ${{ steps.deploy.outputs.page_url }}
