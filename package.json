@@ -1,6 +1,6 @@
 {
   "name": "webscour",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "One keyless CLI for the web: search, page text, PDFs, sitemaps and a polite crawl. Installs the wsc command; the package itself carries the agent skill.",
   "keywords": [
     "web",
