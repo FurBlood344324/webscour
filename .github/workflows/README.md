@@ -19,5 +19,7 @@ Three properties the wrappers keep:
 |---|---|---|
 | `ci.yml` | push, pull_request | matrix 3.11/3.12/3.13, each runs `./scripts/check.sh`; a separate `build` job uploads the wheel |
 | `release.yml` | tag `v*` | verifies tag == `__version__`, downloads the built wheel, publishes with PyPI trusted publishing (OIDC), creates the GitHub Release |
+| `npm.yml` | tag `v*` | verifies tag == `package.json`, that the skill paths resolve, then publishes with npm trusted publishing (OIDC) |
+| `pages.yml` | push touching `install.sh`, `.claude-plugin/marketplace.json` or itself | copies both files into `_site`, deploys to GitHub Pages, then curls the domain and diffs the served bytes against this commit |
 | `upstream-check.yml` | manual only | live searches and one fetch, `continue-on-error: true`, never blocks anything |
 | `deps.yml` | weekly | are the pinned `actions/*` refs still resolving, is lightpanda's nightly CLI still the same shape; opens an issue, changes no code |

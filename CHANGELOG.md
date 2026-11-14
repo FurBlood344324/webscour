@@ -4,6 +4,13 @@
 
 Newest first. Notes no commit message can carry go here.
 
+### Fixed
+
+- The `pages` guard rejected every `git-subdir` source: it stringified the source object and asked
+  whether that text was a directory. The rule now lives in `scripts/check-marketplace.sh`, which
+  reads a string source as a path and an object source by its `path` key, and `check.sh` runs the
+  same script on the source file, so the gate and the deploy cannot disagree about what valid is.
+
 ## 0.1.3 - 2026-11-15
 
 The npm publish failed on 0.1.2 with a message no human should have needed to read: the workflow
