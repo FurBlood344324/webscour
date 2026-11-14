@@ -1,12 +1,47 @@
 {
   "name": "webscour",
-  "version": "0.1.0",
-  "description": "The webscour CLI as a pi package: one skill, no extensions, no runtime dependencies.",
-  "private": true,
+  "version": "0.1.1",
+  "description": "One keyless CLI for the web: search, page text, PDFs, sitemaps and a polite crawl. Installs the wsc command; the package itself carries the agent skill.",
+  "keywords": [
+    "web",
+    "search",
+    "scraping",
+    "crawl",
+    "markdown",
+    "cli",
+    "agent",
+    "llm",
+    "keyless",
+    "mcp"
+  ],
   "license": "MIT",
+  "homepage": "https://github.com/FurBlood344324/webscour",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FurBlood344324/webscour.git"
+  },
+  "bugs": {
+    "url": "https://github.com/FurBlood344324/webscour/issues"
+  },
+  "bin": {
+    "webscour": "npm/wsc.js"
+  },
+  "files": [
+    "npm/wsc.js",
+    "npm/README.md",
+    "skill/SKILL.md",
+    "skill/references",
+    "skill/scripts"
+  ],
+  "skills": [
+    "npm:webscour"
+  ],
   "pi": {
     "skills": [
       "skill/SKILL.md"
     ]
+  },
+  "engines": {
+    "node": ">=18"
   }
 }
