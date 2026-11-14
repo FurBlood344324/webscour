@@ -1,6 +1,6 @@
 {
   "name": "webscour",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Skill for the webscour CLI: search the web, fetch a page as text, read a PDF, map a site, crawl a few pages.",
   "private": true,
   "license": "MIT",

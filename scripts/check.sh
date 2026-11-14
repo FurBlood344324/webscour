@@ -181,9 +181,20 @@ for rel in ("package.json", "pi/package.json"):
     path = os.path.join(root, rel)
     if not os.path.exists(path):
         continue
-    got = json.load(open(path, encoding="utf-8")).get("version")
+    pkg = json.load(open(path, encoding="utf-8"))
+    got = pkg.get("version")
     if got and got != version:
         sys.exit("%s says %s, webscour.__version__ says %s" % (rel, got, version))
+    if rel == "package.json":
+        # The npm tarball is what "skills add webscour" and "pi install npm:webscour" read, so a
+        # wrong path here is a silent no-op for every agent that installs by package name.
+        if pkg.get("skills") != ["npm:webscour"]:
+            sys.exit('package.json must declare skills: ["npm:webscour"]')
+        wanted = list(pkg.get("pi", {}).get("skills") or []) + list(pkg.get("files") or [])
+        for wanted_rel in wanted:
+            target = os.path.join(root, wanted_rel[2:] if wanted_rel.startswith("./") else wanted_rel)
+            if not os.path.exists(target):
+                sys.exit("package.json points at %s, which does not exist" % wanted_rel)
 try:
     tag = subprocess.run(["git", "describe", "--tags", "--exact-match"],
                          capture_output=True, text=True, cwd=root).stdout.strip()

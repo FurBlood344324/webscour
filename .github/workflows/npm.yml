@@ -1,0 +1,66 @@
+# A wrapper, like ci.yml: the version check, the changelog read and the publish decisions live in
+# scripts/, so a laptop can rehearse the same steps. Nothing here decides what "correct" means.
+#
+# npm publishing uses a granular token in the `NPM_TOKEN` secret. PyPI does not need one (OIDC), but
+# npm has no equivalent OIDC trust for a personal account, so this is the one secret the project
+# holds. It is scoped to a single package and can be rotated without touching anything else.
+name: npm
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish to npm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      # The same rule as the PyPI release: the tag is the promise, and the package is the copy.
+      # A tag that disagrees with package.json publishes nothing.
+      - name: the tag is the version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "tag $GITHUB_REF_NAME does not match package.json $pkg" >&2
+            exit 1
+          fi
+          echo "tag $GITHUB_REF_NAME matches package.json $pkg"
+
+      - name: the skill can be resolved from the package
+        run: |
+          # The npm package ships SKILL.md plus its references; if the path in `pi.skills` is
+          # wrong, `pi install npm:webscour` silently installs nothing. Fail here instead.
+          node -e '
+            const p = require("./package.json");
+            const fs = require("node:fs");
+            const paths = [].concat(p.pi?.skills ?? [], p.files ?? []);
+            for (const rel of paths) {
+              const abs = rel.replace(/^\.\//, "");
+              if (!fs.existsSync(abs)) { console.error("missing: " + abs); process.exit(1); }
+            }
+            if (!p.skills || !p.skills.includes("npm:webscour")) {
+              console.error("package.json must declare skills: [\"npm:webscour\"]");
+              process.exit(1);
+            }
+            console.log("skill paths resolve");
+          '
+
+      - name: publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          # --provenance ties the tarball to this workflow run; --access public because the package
+          # name is unscoped. A version that is already published fails loudly rather than silently
+          # skipping, so a mistaken tag is visible.
+          npm publish --provenance --access public
