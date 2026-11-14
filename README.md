@@ -146,11 +146,16 @@ The npm package is the skill and a small `wsc` shim; the tool itself is Python a
 separately (`pipx install webscour`). `package.json` at the repo root declares the skill, so a git
 source works too; `pi/package.json` declares the same skill when `pi/` is the source.
 
-Claude Code, one step (2.1.275 or later):
+Claude Code, two steps and no owner name to remember (2.1.275 or later):
 
 ```bash
-/plugin install webscour --marketplace FurBlood344324/webscour
+claude plugin marketplace add https://wsc.ashina.live/marketplace.json
+claude plugin install webscour
 ```
+
+The marketplace file is served from the same domain as the installer, so the line carries no
+account name; only that file mentions where the repository lives. From a checkout, the local form
+is `claude plugin marketplace add ./.claude-plugin/marketplace.json`.
 
 `.claude-plugin/marketplace.json` lists one plugin whose `source` is `./skill`, with `skills: ["."]` because
 that directory is the skill itself rather than a folder of `<name>/SKILL.md` subdirectories.
