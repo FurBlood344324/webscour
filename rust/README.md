@@ -3,7 +3,7 @@
 Keyless search from the command line. One verb, `search`, and one source name per kind of question:
 a local SearXNG first, then the scrapers, plus a free API for each shape of answer (a package, a
 paper, a repository, a story, a feed). No API key, no account, no log. The crate is `webscour`,
-version 0.2.0, the binary is `wsc`, and the direct dependency list is four crates.
+the binary is `wsc`, and the direct dependency list is four crates.
 
 `web` asks a **local** SearXNG (`127.0.0.1:8888`, `WEBSEARCH_SEARXNG` overrides) and falls back, in
 order, to `lite.duckduckgo.com`, `html.duckduckgo.com` and Bing. The first backend that answers ends
