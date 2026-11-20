@@ -91,7 +91,7 @@ impl Row {
     }
 }
 
-/// Collapse whitespace, then cut at `n` characters with a single `…` — `cli.cut`.
+/// Collapse whitespace, then cut at `n` characters with a single `…` - `cli.cut`.
 pub fn clip_ellipsis(text: &str, n: usize) -> String {
     let joined = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let chars: Vec<char> = joined.chars().collect();
@@ -102,7 +102,7 @@ pub fn clip_ellipsis(text: &str, n: usize) -> String {
     format!("{}…", head.trim_end())
 }
 
-/// Collapse whitespace, then cut at `n` characters with `...` — `sources._clip`.
+/// Collapse whitespace, then cut at `n` characters with `...` - `sources._clip`.
 pub fn clip_dots(text: &str, n: usize) -> String {
     let joined = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let chars: Vec<char> = joined.chars().collect();

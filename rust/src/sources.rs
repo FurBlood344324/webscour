@@ -2,7 +2,7 @@
 //!
 //! Each is two things in one place, as in the Python: a pure parser (JSON or feed in, rows out)
 //! and the one request that feeds it. The parsers are pure so `--self-test` exercises them with
-//! no network — the same rule `search.rs` and `html.rs` follow.
+//! no network - the same rule `search.rs` and `html.rs` follow.
 //!
 //! Every endpoint here was measured before it was ported: no key, no login, a 200 and a body
 //! with the fact in it. The sources that failed that test (Reddit 403, Semantic Scholar 429
@@ -1230,7 +1230,7 @@ convolutional neural networks. </summary>
             vec!["dated", "too old"]
         );
         // The later copy is the one that survives the floor, and it arrives after the first
-        // copy was dropped for being too old — the url is still only seen once.
+        // copy was dropped for being too old - the url is still only seen once.
         let late = merge_fresh(rows.clone(), 5, "2026-11-11");
         assert_eq!(late.len(), 1);
         assert_eq!(late[0].title, "same url");

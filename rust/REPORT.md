@@ -65,7 +65,7 @@ $ wsc search "ureq rust http client" --limit 3
 2. GitHub - Olilin1/reqwest: An easy and powerful Rust HTTP Client - https://github.com/Olilin1/reqwest  [mwmbl]
 3. Dragons' Den - Wikipedia - https://en.wikipedia.org/wiki/Dragons%27_Den  [bing]
 ```
-(rows 1–3 carry `[engine]` provenance; the same query on the failures-only fallback path with
+(rows 1-3 carry `[engine]` provenance; the same query on the failures-only fallback path with
 `WEBSEARCH_SEARXNG=http://127.0.0.1:9` printed
 `backend searxng: local SearXNG … not answering (…) and searxng-local did not start` and answered
 from DDG lite.)

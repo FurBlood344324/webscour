@@ -1,4 +1,4 @@
-//! The fixture suite, read from disk — the same payloads `--self-test` compiles in.
+//! The fixture suite, read from disk - the same payloads `--self-test` compiles in.
 //!
 //! `src/selftest.rs` embeds these files with `include_str!` because a released binary has no
 //! checkout beside it. This file reads them at run time instead, so the two paths cannot agree
