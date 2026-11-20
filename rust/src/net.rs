@@ -141,12 +141,15 @@ pub fn http_as(
             )
         })
         .collect();
-    let body = resp
+    let bytes = resp
         .body_mut()
         .with_config()
         .limit(MAX_BYTES)
-        .read_to_string()
+        .read_to_vec()
         .map_err(|e| FetchError::new(format!("body: {}", e)))?;
+    // Decode with replacement, like the Python's decode(cs, "replace"): a latin-1 byte in a
+    // title must not kill the whole backend.
+    let body = String::from_utf8_lossy(&bytes).into_owned();
     Ok(Response {
         body,
         status,
