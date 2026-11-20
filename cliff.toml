@@ -11,15 +11,15 @@
 #   anything with `!`       minor   while major == 0
 #   anything with `!`       major   at 1.0.0 and after
 #
-# `scripts/release.sh` takes the version explicitly and appends a section built from this
-# template; it never invents a number.
+# A release takes the version explicitly and appends a section built from this template; it
+# never invents a number.
 
 [changelog]
 header = """
 # Changelog
 
 The hand-written `## Unreleased` section below is for notes no commit message can carry: a
-decision, a caveat, a thing a user must know before upgrading. `scripts/release.sh` moves it
+decision, a caveat, a thing a user must know before upgrading. Cutting a release moves it
 into the new version's section and leaves a fresh empty one on top.
 """
 body = """

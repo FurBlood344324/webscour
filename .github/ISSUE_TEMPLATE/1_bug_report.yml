@@ -11,8 +11,8 @@ body:
 
         A page that answers **403**, **429** or a CAPTCHA is not a bug. That is a site refusing
         a datacenter or residential IP, and it is documented in
-        [docs/routing.md](https://github.com/FurBlood344324/webscour/blob/main/docs/routing.md).
-        It is only a bug when the route should have applied and did not.
+        [rust/README.md](https://github.com/FurBlood344324/webscour/blob/main/rust/README.md).
+        It is only a bug when the source should have answered and did not.
 
   - type: textarea
     attributes:

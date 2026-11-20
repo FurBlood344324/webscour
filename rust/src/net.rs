@@ -147,7 +147,7 @@ pub fn http_as(
         .limit(MAX_BYTES)
         .read_to_vec()
         .map_err(|e| FetchError::new(format!("body: {}", e)))?;
-    // Decode with replacement, like the Python's decode(cs, "replace"): a latin-1 byte in a
+    // Decode with replacement, an invalid byte becoming U+FFFD: a latin-1 byte in a
     // title must not kill the whole backend.
     let body = String::from_utf8_lossy(&bytes).into_owned();
     Ok(Response {
@@ -205,7 +205,7 @@ pub fn render(rows: &[crate::row::Row], json: bool) -> String {
         .collect()
 }
 
-/// The `--json` block, byte-compatible with `json.dumps(rows, ensure_ascii=False, indent=1)`.
+/// The `--json` block: `indent=1`, keys in insertion order, non-ASCII written as itself.
 ///
 /// Written by hand rather than through `to_string_pretty` because the indent width and the key
 /// order are both part of what a caller can see: a front end that diffed the two outputs would
@@ -217,8 +217,8 @@ pub fn render_json(rows: &[crate::row::Row]) -> String {
     out
 }
 
-/// `json.dumps(..., indent=1)`: a container puts each element on its own line at depth + 1, and
-/// a scalar sits where it is. `ensure_ascii=False` means non-ASCII is written as itself.
+/// `indent=1`: a container puts each element on its own line at depth + 1, and a scalar sits
+/// where it is. Non-ASCII is written as itself.
 fn write_json(value: &serde_json::Value, depth: usize) -> String {
     let pad = " ".repeat(depth);
     let inner_pad = " ".repeat(depth + 1);
@@ -252,7 +252,7 @@ fn write_scalar(value: &serde_json::Value) -> String {
     }
 }
 
-/// A JSON string, with the escapes Python emits for `ensure_ascii=False` and no others.
+/// A JSON string, with the standard escapes and no others: non-ASCII is written as itself.
 fn quote_json(text: &str) -> String {
     let mut out = String::from("\"");
     for ch in text.chars() {
@@ -272,8 +272,9 @@ fn quote_json(text: &str) -> String {
     out
 }
 
-/// Joining inline fragments: `append_text` from the Python, because a snippet that reads
-/// "requires Python , and" is a broken snippet.
+/// Joining inline fragments, because a snippet that reads "requires , and" is a broken
+/// snippet: a space goes between two non-empty pieces unless the second starts with closing
+/// punctuation or the first ends with an opening bracket or a slash.
 pub fn append_text(have: &str, add: &str) -> String {
     if have.is_empty() {
         return add.to_string();

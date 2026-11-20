@@ -2,20 +2,17 @@
 
 # Two ecosystems, and neither one is the runtime.
 #
-# `webscour` has `dependencies = []`: the standard library plus the system binaries named in the
-# README. So the `pip` entry below has nothing to update in the package itself. What it does
-# update is the dev toolchain the gate needs (ruff, build, twine), which lives in `.venv-dev` on
-# a workstation and is installed by each workflow. A bump there is real work: a new ruff can
-# start failing `ruff check .` on code nobody touched, and that is a person's decision, not a
-# merge button's.
+# The crate has four direct dependencies (ureq, serde_json, scraper, roxmltree), so a `cargo` bump
+# is real work: a new minor can move a parser or the JSON bytes, and `cargo test` is what decides.
+# The `github-actions` entry keeps the pinned actions current.
 #
-# Groups are one per ecosystem on purpose. Three separate pull requests for three dev tools is
-# three times the gate run for one afternoon's pin bump.
+# Groups are one per ecosystem on purpose. Two separate pull requests for two ecosystems is twice
+# the gate run for one afternoon's pin bump.
 
 version: 2
 updates:
-  - package-ecosystem: "pip"
-    directory: "/"
+  - package-ecosystem: "cargo"
+    directory: "/rust"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -25,7 +22,7 @@ updates:
     commit-message:
       prefix: "chore(deps)"
     groups:
-      dev-tools:
+      crates:
         patterns:
           - "*"
 

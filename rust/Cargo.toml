@@ -8,7 +8,7 @@ license = "MIT"
 repository = "https://github.com/FurBlood344324/webscour"
 # Development artifacts stay out of the .crate tarball: they belong to the repo, not to the
 # published package. tests and its fixtures ship, because cargo test after install uses them.
-exclude = ["REPORT.md", "eval"]
+exclude = ["REPORT.md"]
 
 [lib]
 name = "webscour"
@@ -23,8 +23,8 @@ path = "src/main.rs"
 # runtime would be a second event loop for nothing.
 ureq = "3"
 # Every keyless endpoint answers JSON, and the rows are built from it directly. `preserve_order`
-# keeps a row's keys in the order they were inserted: the Python prints title, url, snippet,
-# engines, published, and a diff of two implementations should not be about key order.
+# keeps a row's keys in the order they were inserted: title, url, snippet, engines, published.
+# Key order is visible in `--json`, so a comparison of two runs should not be about it.
 serde_json = { version = "1", features = ["preserve_order"] }
 # A result page is HTML; a real parser is what keeps a nested <b> inside a snippet from
 # turning into a broken row.

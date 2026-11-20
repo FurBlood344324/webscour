@@ -1,4 +1,4 @@
-//! `wsc --self-test`: the checks the Python runs, over the same captured payloads.
+//! `wsc --self-test`: the offline checks over the captured payloads.
 //!
 //! The fixtures are compiled in with `include_str!` rather than read from `tests/fixtures`.
 //! A released binary has no source tree next to it, and a self-test that needs the checkout is
@@ -41,7 +41,7 @@ fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).expect("fixture is valid JSON")
 }
 
-/// A check either passes or names the assertion that failed, the way the Python's `chk` does.
+/// A check either passes or names the assertion that failed.
 type Check = (&'static str, fn() -> Result<(), String>);
 
 fn want(condition: bool, detail: impl FnOnce() -> String) -> Result<(), String> {

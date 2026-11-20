@@ -1,10 +1,9 @@
 //! The scraped result pages: DuckDuckGo lite, DuckDuckGo html, Bing.
 //!
-//! Each is one DOM pass with a selector per field. The Python walks a flat token stream instead,
-//! and that was the right shape for its hand-written tokenizer; with a real HTML5 parser a
-//! selector says the same thing and says it in one line, which is the point of paying for the
-//! dependency. The pairing rule is the Python's: a snippet belongs to the last title seen, and a
-//! row without both a title and a url is dropped.
+//! Each is one DOM pass with a selector per field. With a real HTML5 parser a selector says what
+//! a hand-written token stream would and says it in one line, which is the point of paying for the
+//! dependency. The pairing rule: a snippet belongs to the last title seen, and a row without both
+//! a title and a url is dropped.
 
 use scraper::{ElementRef, Html, Selector};
 
@@ -90,8 +89,8 @@ pub fn parse_ddg_lite(page: &str) -> Vec<Row> {
 /// own snippet anchor.
 ///
 /// Scoped to the container rather than to two flat lists, because a result with no snippet
-/// would otherwise hand its snippet to the next row - the Python's flat pass pairs by "last
-/// title seen" and gets the same answer only while every row has both halves. The flat pairing
+/// would otherwise hand its snippet to the next row - a flat pass that pairs by "last title
+/// seen" gets the same answer only while every row has both halves. The flat pairing
 /// is kept as the fallback for a page shape with no `div.result`.
 pub fn parse_ddg_html(page: &str) -> Vec<Row> {
     let doc = Html::parse_document(page);
@@ -113,7 +112,7 @@ pub fn parse_ddg_html(page: &str) -> Vec<Row> {
         rows.push(row);
     }
     if rows.is_empty() {
-        // No container: fall back to the document order the Python walks.
+        // No container: fall back to document order.
         let titles: Vec<Row> = all(&doc, "a.result__a")
             .into_iter()
             .map(|a| {

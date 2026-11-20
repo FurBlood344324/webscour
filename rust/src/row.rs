@@ -4,10 +4,10 @@
 //! publication date; `engines` when a backend can say which upstream answered. Nothing invents a
 //! date: a Wikipedia article has none, and its last-edit stamp is not one.
 //!
-//! Two clipping styles live here on purpose, because the Python has two and they are visible in
-//! the output: the keyless sources cut a snippet with `...` at parse time (`sources._clip`),
-//! while the renderer cuts with `…` (`cli.cut`). Same length, different mark, and a caller who
-//! diffed the two implementations would see it.
+//! Two clipping styles live here on purpose, and both are visible in the output: the keyless
+//! sources cut a snippet with `...` at parse time (`clip_dots`), while the renderer cuts with
+//! `…` (`clip_ellipsis`). Same length, different mark, and a caller comparing two rows would
+//! see it.
 
 use serde_json::{Map, Value};
 
@@ -61,10 +61,10 @@ impl Row {
         self
     }
 
-    /// The output row, exactly the keys the Python's `--json` prints.
+    /// The output row, exactly the keys `--json` prints.
     pub fn to_json(&self) -> Value {
         let mut m = Map::new();
-        // Insertion order is the Python's `render`: title, url, snippet, engines, published.
+        // Insertion order is the renderer's: title, url, snippet, engines, published.
         m.insert("title".into(), Value::String(self.title.clone()));
         m.insert("url".into(), Value::String(self.url.clone()));
         m.insert(
@@ -91,7 +91,7 @@ impl Row {
     }
 }
 
-/// Collapse whitespace, then cut at `n` characters with a single `…` - `cli.cut`.
+/// Collapse whitespace, then cut at `n` characters with a single `…`.
 pub fn clip_ellipsis(text: &str, n: usize) -> String {
     let joined = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let chars: Vec<char> = joined.chars().collect();
@@ -102,7 +102,7 @@ pub fn clip_ellipsis(text: &str, n: usize) -> String {
     format!("{}…", head.trim_end())
 }
 
-/// Collapse whitespace, then cut at `n` characters with `...` - `sources._clip`.
+/// Collapse whitespace, then cut at `n` characters with `...`.
 pub fn clip_dots(text: &str, n: usize) -> String {
     let joined = text.split_whitespace().collect::<Vec<_>>().join(" ");
     let chars: Vec<char> = joined.chars().collect();
@@ -134,8 +134,8 @@ mod tests {
     fn raw_rows_are_not_clipped_and_source_rows_are() {
         let long = "x".repeat(400);
         assert_eq!(Row::raw(&long, "u", &long).title.chars().count(), 400);
-        // `sources._clip(text, 300)` keeps 299 characters and then `...`, so the row is 302
-        // characters wide before the renderer cuts it to 200. That is the Python's shape, not a
+        // `clip_dots(text, 300)` keeps 299 characters and then `...`, so the row is 302
+        // characters wide before the renderer cuts it to 200. That is the clipping rule, not a
         // rounding mistake here.
         let clipped = Row::new(&long, "u", &long);
         assert_eq!(clipped.title.chars().count(), 302);

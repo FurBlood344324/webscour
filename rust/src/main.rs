@@ -2,8 +2,8 @@
 //!
 //! The argv parser is hand-rolled on purpose. There is exactly one verb with six flags; a
 //! derive-based parser would be a dependency and a proc-macro compile for a `match` loop, and
-//! the exit codes here are part of the contract with the Python CLI (`0` answered, `2` usage or
-//! no answer, `1` help with no verb). Keeping them literal keeps them checkable.
+//! the exit codes are the contract (`0` answered, `2` usage or no answer, `1` help with no
+//! verb). Keeping them literal keeps them checkable.
 
 use std::io::Write;
 
@@ -87,7 +87,7 @@ struct SearchArgs {
 
 fn parse_search(argv: &[String]) -> Result<SearchArgs, String> {
     let mut tokens: Vec<String> = Vec::with_capacity(argv.len());
-    // argparse accepts `--flag=value`; expand every such token into `--flag value` before the
+    // `--flag=value` is accepted too; every such token is expanded into `--flag value` before the
     // loop, so no flag needs its own equals-form handling. A word containing '=' without a
     // leading `--` is query text and passes through untouched.
     for t in argv {
@@ -225,9 +225,9 @@ fn cmd_search(argv: &[String]) -> i32 {
             });
         }
         "github" => {
-            // `left` is only set by a call that answered, and the Python prints the last one it
-            // saw: a source that failed has no rate limit to report, and a missing header is the
-            // string "None" in both implementations rather than an invented number.
+            // `left` is only set by a call that answered, and the last one printed wins: a
+            // source that failed has no rate limit to report, and a missing header is the string
+            // "None" rather than an invented number.
             let mut left: Option<Option<String>> = None;
             let calls: [(&str, GhSearch); 2] =
                 [("repos", search::gh_repos), ("issues", search::gh_issues)];
@@ -307,7 +307,7 @@ fn finish(a: &SearchArgs, results: &[Row], note: &Option<String>) -> i32 {
             println!("-- {}", n);
         }
     }
-    // A closed pipe is not an error for a CLI whose reader went first (`head -1`), so the
+    // A closed stdout is not an error for a CLI whose reader went first (`head -1`), so the
     // flush is checked and the result thrown away rather than turned into an exit code.
     let _ = std::io::stdout().flush();
     0
@@ -345,7 +345,7 @@ mod tests {
     }
 
     #[test]
-    fn the_limit_is_clamped_like_the_python() {
+    fn the_limit_is_clamped_to_a_positive_range() {
         assert_eq!(parse_search(&args(&["x", "--limit", "999"])).unwrap().limit, 30);
         assert_eq!(parse_search(&args(&["x", "--limit", "0"])).unwrap().limit, 1);
     }

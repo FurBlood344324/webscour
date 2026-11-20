@@ -8,8 +8,8 @@ use std::io::Write;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// At most one live web query per second, across processes. Same file as the Python version,
-/// so a shell loop mixing the two respects one budget rather than two.
+/// At most one live web query per second, across processes: every process reads and writes the
+/// same file, so a shell loop respects one budget rather than one per call.
 pub const PACE_SECONDS: f64 = 1.0;
 
 /// Secrets of a result page's bot check: an answer carrying one of these is not a result list.
@@ -75,7 +75,7 @@ pub fn blocked(page: &str) -> bool {
     BLOCK_MARKS.iter().any(|m| page.contains(m))
 }
 
-/// The query's terms, as the Python's `re.findall(r"[0-9a-zA-Z_+-]{4,}", query)` sees them.
+/// The query's terms: runs of four or more characters from `[0-9a-zA-Z_+-]`, lowercased.
 pub fn terms(query: &str) -> Vec<String> {
     let mut out = Vec::new();
     let mut cur = String::new();
@@ -180,7 +180,7 @@ fn hex(b: u8) -> String {
     format!("%{:02X}", b)
 }
 
-/// `urllib.parse.quote(s, safe=safe)`: never escapes the unreserved set or `safe`.
+/// Percent-encode for a URL: never escapes the unreserved set or `safe`.
 pub fn quote(s: &str, safe: &str) -> String {
     let mut out = String::new();
     for &b in s.as_bytes() {
@@ -193,12 +193,12 @@ pub fn quote(s: &str, safe: &str) -> String {
     out
 }
 
-/// `urllib.parse.quote_plus(s)`: like `quote`, and a space is `+`.
+/// Form encoding: like [`quote`], and a space is `+`.
 pub fn quote_plus(s: &str) -> String {
     quote(s, "").replace(' ', "+").replace("%20", "+")
 }
 
-/// Percent-decode a form/query value. Invalid escapes are kept as written, like the Python.
+/// Percent-decode a form/query value. Invalid escapes are kept as written.
 pub fn form_decode(s: &str) -> String {
     let bytes = s.as_bytes();
     let mut out: Vec<u8> = Vec::new();

@@ -1,7 +1,7 @@
 //! `webscour` as a library, because the parsers are the part that deserves tests and the
 //! binary is a thin argv reader over them.
 //!
-//! The module graph is one-way, the same one the Python keeps: `row` and `util` have no
+//! The module graph is one-way: `row` and `util` have no
 //! dependencies, `net` depends on `util`, the parsers depend on `row` + `net`, and the CLI
 //! depends on everything. Nothing here needs an async runtime: every command is one request in
 //! front of a reader.

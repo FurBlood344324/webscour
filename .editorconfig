@@ -12,11 +12,6 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
 
-# Python: four spaces is not a preference, it is the language's own idea of a block.
-[*.py]
-indent_size = 4
-max_line_length = 100
-
 # YAML and TOML are two-space formats by convention, and nested keys read worse at four.
 [*.{yml,yaml}]
 indent_size = 2
@@ -41,9 +36,6 @@ indent_style = tab
 
 # Fixtures are bytes captured from a remote server: reformatting one would make it no longer a
 # fixture, and the benchmark's numbers would move for a reason nobody chose.
-[tests/fixtures/**]
+[rust/tests/fixtures/**]
 insert_final_newline = false
 trim_trailing_whitespace = false
-
-[tests/baselines/*.json]
-insert_final_newline = true

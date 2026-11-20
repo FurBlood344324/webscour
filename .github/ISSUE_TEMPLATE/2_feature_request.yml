@@ -7,9 +7,9 @@ body:
     attributes:
       value: |
         Two answers below decide whether this can be built at all: whether it needs a source
-        that has no free API, and whether it would add a Python dependency. The project ships
-        `dependencies = []` and there is a test that keeps it that way, so the second answer
-        is not a preference, it is a constraint.
+        that has no free API, and whether it would add a dependency. The crate ships four direct
+        dependencies and the gate keeps it that way, so the second answer is not a preference,
+        it is a constraint.
 
   - type: textarea
     attributes:
@@ -44,15 +44,13 @@ body:
 
   - type: dropdown
     attributes:
-      label: Would it change the dependencies = [] guarantee?
+      label: Would it change the four-crate dependency list?
       description: |
-        Anything that is not the standard library or a system binary would. An optional extra
-        that upgrades behaviour is also a change, because it makes two installs behave
-        differently.
+        A fifth crate, or an optional feature that pulls one in, is a change: it makes two
+        builds behave differently and it has to be argued in the Decisions table.
       options:
-        - "No, standard library and existing binaries only"
-        - "It needs a system binary that is not installed today"
-        - "It would need a Python package"
+        - "No, the four crates only"
+        - "It would need one more crate"
         - "I do not know"
     validations:
       required: true

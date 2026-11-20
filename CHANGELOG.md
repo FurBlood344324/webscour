@@ -2,99 +2,30 @@
 
 ## Unreleased
 
-Newest first. Notes no commit message can carry go here.
+## 0.2.0 - 2026-11-20
 
-## 0.1.3 - 2026-11-15
-
-The npm publish failed on 0.1.2 with a message no human should have needed to read: the workflow
-asked for credentials that it deliberately does not have. This release is that fix, and the two
-things it was waiting behind.
-
-### Changed
-
-- The README opens with the drawing and the name as text, not with a picture of the word. A
-  wordmark drawn as paths has to be redrawn whenever the name changes, and a README already says
-  the name one line below the picture. The mark files are the whole identity now.
-- The Claude Code marketplace is served from `https://wsc.ashina.live/marketplace.json`, the same
-  domain as the installer, so the install line carries no account name. The plugin source is
-  `git-subdir` (the documented type for a plugin in a repository subdirectory), which mounts
-  `skill/` without cloning the tool's Python.
+The crate is the project. `webscour` 0.2.0 is a keyless search CLI in one binary: a local SearXNG
+first, three scraper fallbacks, and 19 structured sources, over four direct dependencies.
 
 ### Added
 
-- A Claude Code section for the MCP server (`claude mcp add webscour -- wsc mcp`), which existed in
-  `mcp/README.md` and in the verb table but was missing from the page a user reads first.
-- A `marketplace` line in the gate: `scripts/check-marketplace.sh` reads the marketplace file the
-  same way Claude Code does, so a source that would fail at `claude plugin install` fails here.
-
-### Fixed
-
-- The npm job now authenticates through OIDC trusted publishing: `id-token: write`, no
-  `NODE_AUTH_TOKEN`, and `npm@11.5.1` installed first because the client bundled with Node 22
-  predates trusted publishing and falls back to looking for a token. The trusted publisher was
-  configured correctly on the package the whole time; the client was too old to use it.
-- The tag for 0.1.2 pointed at a commit from before that fix, so re-running the workflow re-ran the
-  old file. That is why 0.1.3 exists instead of a re-run: a workflow run executes the file as it
-  was when the run was created, not as it is now.
-- The first version of the `pages` guard rejected every `git-subdir` source: it stringified the
-  source object and asked whether that text was a directory, which is false for every plugin, so
-  the deploy stopped before uploading and the marketplace URL answered 404 while `install.sh` kept
-  serving. The rule now reads a string source as a path and an object source by its `path` key.
-
-## 0.1.2 - 2026-11-15
-
-The project home page was showing the CI notes and the logo was a picture of the word "webscour"
-drawn in a font-shaped path. Both are now what they should have been.
-
-### Added
-
-- The mark is a drawing rather than a letterform: a 4 by 4 page of cells with one cell per row
-  replaced by a diagonal blade. The grid is the page, the four blades are what scrapes it.
-- `scripts/build-llms-full.sh` rebuilds the concatenated docs file, so its recipe is a script and
-  not a heredoc in prose.
+- `wsc search` with `--source`, `--limit`, `--category`, `--fresh`, `--since` and `--json`.
+- The `web` chain: local SearXNG, then DDG lite, DDG html, Bing, with the fallback reported on
+  stderr and one `[engine]` tag per row.
+- Structured sources: `github`, `so`, `hn`, `arxiv`, `discourse:<base>`, `rss:<feed-url>`,
+  `wikipedia`, `openalex`, `crossref`, `arxiv-api`, `europepmc`, `pubmed`, `pypi`, `npm`, `crates`,
+  `devto`, `wayback`, `googlenews`, `bbc`.
+- `--self-test`: 35 offline checks compiled into the binary, over the captured fixtures.
+- `cargo install webscour` as the install path, plus a staged AUR PKGBUILD that builds the
+  published crate.
 
 ### Changed
 
-- `pi install npm:webscour` replaces the git URL everywhere. The npm package carries the skill and
-  a shim; the tool stays Python and installs separately.
-- `docs/quickstart.md` gains an agent-skill step, with the raw `SKILL.md` URL as the fallback for
-  an agent that has no package manager.
+- The output shape is fixed: title, url, snippet, engines, published; `--json` uses one space of
+  indent, insertion order, non-ASCII left as UTF-8.
+- Exit codes are the contract: `0` answered, `1` help with no verb, `2` usage error or no answer.
 
-### Fixed
+### Removed
 
-- GitHub resolves a repository home page as `.github/README.md` before `README.md`, so the front
-  page was an essay about CI wrappers while the real README sat one click away. The file moved to
-  `.github/workflows/README.md`.
-- Every drawing now ships as a light file and a dark file with the ink written in, chosen by
-  `picture` and `prefers-color-scheme`. A media query inside the SVG cannot work: a file loaded
-  through `img` is a separate document and the host page's theme never reaches it.
-
-## 0.1.1 - 2026-11-15
-
-A patch release with no change to what the tool does. Every commit here fixes something that made
-the project harder to trust: two of them were gate failures that only appeared on a clean machine,
-and one was a README that opened without its own name.
-
-### Fixed
-
-- `check-tag.sh` read `GITHUB_REF_NAME` unconditionally, so a pull-request run (`1/merge`) was
-  reported as a version mismatch. It now reads the name only when `GITHUB_REF_TYPE` is `tag`.
-- The build probe in `check.sh` ran from the repository root, where a leftover `./build` directory
-  is a namespace package and replaced the `build` tool with an empty namespace. It runs from `/`.
-- The same probe tested `[ -x python3 ]`, which is false: `-x` tests a path and `python3` is a
-  command name. The interpreter is now resolved with `command -v` first.
-- The release gate builds with `--no-isolation`, and pyproject declares `setuptools>=77` as the
-  backend. Python 3.12 and later ship without setuptools, so two of the three matrix entries
-  failed with a message naming neither the interpreter nor the fix. CI installs it, and the gate
-  checks the version before building and says what to install.
-
-### Documentation
-
-- The README opens with the wordmark, the name, the one-line promise and the badges, then gives the
-  `curl` installer and a paste-ready agent prompt before the manual install routes.
-
-## 0.1.0 - 2026-11-14
-
-First published version. The tool ran for months inside one operator's vault as `web`; this release
-packages it and then does the two jobs the packaging exposed: the extraction was noisy, and the
-render fallback was borrowing someone else's environment.
+- The pre-0.2 tree: the earlier tool, its packaging, its docs, its tests and its CI. The repository
+  now carries the crate, the AUR packaging and the license. Earlier notes are in git history.
