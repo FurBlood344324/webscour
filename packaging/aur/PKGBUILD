@@ -1,6 +1,6 @@
-# Draft (2026-11-20), staged not submitted: AUR registration is closed for now.
-# pkgver starts as the planned first Rust release (0.2.0, after 0.1.3 python);
-# sha256sums are SKIP until the release tag exists, then updpkgsums fills them.
+# Staged not submitted: AUR registration is closed for now (2026-11-20).
+# pkgver matches the published crates.io release (webscour 0.2.0); the sha256sum below is
+# the real .crate tarball hash, filled by hand after the release (updpkgsums re-derives it).
 # Submission procedure is in packaging/aur/README.md. No CI: hands only.
 
 pkgname=webscour
@@ -13,7 +13,7 @@ license=('MIT')
 depends=('gcc-libs')
 makedepends=('cargo')
 source=("$pkgname-$pkgver.crate::https://crates.io/api/v1/crates/$pkgname/$pkgver/download")
-sha256sums=('SKIP')
+sha256sums=('b1b95b7cca9f93b3cf6ba1deb77178b30b7fdc75c9dbfc559e8be4b80ba2efc1')
 
 prepare() {
   cd "$pkgname-$pkgver"
