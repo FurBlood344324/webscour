@@ -1,0 +1,982 @@
+{
+ "results": [
+  {
+   "query": "ureq rust http client",
+   "expect": "github.com/algesten/ureq",
+   "python": {
+    "urls": [
+     "https://bitbashing.io/rust-http.html",
+     "https://github.com/Olilin1/reqwest",
+     "https://support.google.com/chrome/answer/95414?hl=tr&co=GENIE.Platform%3DDesktop"
+    ],
+    "seconds": 6.076866719999998,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://github.com/Olilin1/reqwest",
+     "https://bitbashing.io/rust-http.html",
+     "https://www.wikipedia.org/"
+    ],
+    "seconds": 0.9377952349996121,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "tokio select macro",
+   "expect": "docs.rs/tokio",
+   "python": {
+    "urls": [
+     "https://tokio.rs/tokio/tutorial/select",
+     "https://www.slideshare.net/MAMPIYACHANDRA/impact-on-select-macro-economic-variables-on-the-movement-of-bse-sensex",
+     "https://docs.rs/tokio/latest/tokio/macro.select.html"
+    ],
+    "seconds": 1.1614233780001086,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://tokio.rs/tokio/tutorial/select",
+     "https://www.slideshare.net/MAMPIYACHANDRA/impact-on-select-macro-economic-variables-on-the-movement-of-bse-sensex",
+     "https://docs.rs/tokio/latest/tokio/macro.select.html"
+    ],
+    "seconds": 0.8215758010001082,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "serde rename_all attribute",
+   "expect": "serde.rs",
+   "python": {
+    "urls": [
+     "https://serde.rs/container-attrs.html",
+     "https://docs.rs/serde-attributes/latest/serde_attributes/rename_all/index.html",
+     "https://docs.rs/serde-xml-rs/latest/serde_xml_rs/"
+    ],
+    "seconds": 0.8956620059998386,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://serde.rs/container-attrs.html",
+     "https://docs.rs/serde-attributes/latest/serde_attributes/rename_all/index.html",
+     "https://docs.rs/serde-xml-rs/latest/serde_xml_rs/"
+    ],
+    "seconds": 2.55676504100029,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "rustls certificate verification",
+   "expect": "docs.rs/rustls",
+   "python": {
+    "urls": [
+     "https://github.com/rustls/webpki",
+     "https://follow.agwa.name/objects/b1da3f2c-b373-4427-9b40-fea0ea754a35",
+     "https://github.com/rustls/rustls-platform-verifier"
+    ],
+    "seconds": 6.075151609999921,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://github.com/rustls/webpki",
+     "https://follow.agwa.name/objects/b1da3f2c-b373-4427-9b40-fea0ea754a35",
+     "https://github.com/rustls/rustls-platform-verifier"
+    ],
+    "seconds": 1.342752706000283,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "clap derive subcommand example",
+   "expect": "docs.rs/clap",
+   "python": {
+    "urls": [
+     "https://docs.rs/clap/latest/clap/_derive/",
+     "https://tbt.qkation.com/posts/clap-recipes/",
+     "https://gribnau.dev/posts/puzzle-sharing-declarative-args-between-top-level-and-subcommand/"
+    ],
+    "seconds": 3.4735417850006343,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.rs/clap/latest/clap/_derive/",
+     "https://tbt.qkation.com/posts/clap-recipes/",
+     "https://gribnau.dev/posts/puzzle-sharing-declarative-args-between-top-level-and-subcommand/"
+    ],
+    "seconds": 6.195231742999567,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "python asyncio task cancellation",
+   "expect": "docs.python.org",
+   "python": {
+    "urls": [
+     "https://docs.python.org/3/library/asyncio-task.html",
+     "https://github.com/abcdenis/periodic",
+     "https://www.sethserver.com/python/python-asyncio-recipes.html"
+    ],
+    "seconds": 1.8987768719998712,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.python.org/3/library/asyncio-task.html",
+     "https://github.com/abcdenis/periodic",
+     "https://stackoverflow.com/questions/56052748/python-asyncio-task-cancellation"
+    ],
+    "seconds": 1.0464586510006484,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "pytest parametrize fixture",
+   "expect": "docs.pytest.org",
+   "python": {
+    "urls": [
+     "https://miguendes.me/how-to-use-fixtures-as-arguments-in-pytestmarkparametrize",
+     "https://docs.pytest.org/en/stable/how-to/parametrize.html",
+     "https://github.com/pytest-dev/pytest/issues/759"
+    ],
+    "seconds": 0.9887732799998048,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://miguendes.me/how-to-use-fixtures-as-arguments-in-pytestmarkparametrize",
+     "https://docs.pytest.org/en/stable/how-to/parametrize.html",
+     "https://github.com/pytest-dev/pytest/issues/759"
+    ],
+    "seconds": 0.9492527980000887,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "numpy einsum documentation",
+   "expect": "numpy.org",
+   "python": {
+    "urls": [
+     "https://docs.jax.dev/en/latest/_autosummary/jax.numpy.einsum.html",
+     "https://numpy.org/doc/stable/reference/generated/numpy.einsum.html",
+     "https://optimized-einsum.readthedocs.io/en/stable/input_format.html"
+    ],
+    "seconds": 6.0866501569998945,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.jax.dev/en/latest/_autosummary/jax.numpy.einsum.html",
+     "https://numpy.org/doc/stable/reference/generated/numpy.einsum.html",
+     "https://optimized-einsum.readthedocs.io/en/stable/input_format.html"
+    ],
+    "seconds": 0.9491865689997212,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "sqlite wal mode",
+   "expect": "sqlite.org",
+   "python": {
+    "urls": [
+     "https://fly.io/blog/wal-mode-in-litefs/",
+     "https://ryangjchandler.co.uk/posts/enabling-wal-mode-with-sqlite-in-laravel",
+     "https://sqlite.org/asyncvfs.html"
+    ],
+    "seconds": 2.2150660930001322,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://fly.io/blog/wal-mode-in-litefs/",
+     "https://ryangjchandler.co.uk/posts/enabling-wal-mode-with-sqlite-in-laravel",
+     "https://sqlite.org/wal.html"
+    ],
+    "seconds": 0.934756059999927,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "git worktree add branch",
+   "expect": "git-scm.com",
+   "python": {
+    "urls": [
+     "https://www.gitkraken.com/learn/git/git-worktree",
+     "https://braindetox.kr/",
+     "https://velog.io/"
+    ],
+    "seconds": 2.56157060500027,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://git-scm.com/docs/git-worktree",
+     "https://github.com/nautofon/Show_company_branches",
+     "https://blockhead.consulting/blog/Git_Worktrees_for_AI_Agents"
+    ],
+    "seconds": 6.006584632999875,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "docker compose healthcheck",
+   "expect": "docs.docker.com",
+   "python": {
+    "urls": [
+     "https://www.docker.com/blog/compose-1-6/",
+     "https://www.docker.com/",
+     "https://docs.docker.com/"
+    ],
+    "seconds": 0.9643795530000716,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://www.docker.com/blog/compose-1-6/",
+     "https://box464.com/posts/hollo-install/",
+     "https://www.docker.com/"
+    ],
+    "seconds": 1.0724852120001742,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "nginx proxy_pass websocket",
+   "expect": "nginx.org",
+   "python": {
+    "urls": [
+     "https://websocket.org/guides/infrastructure/nginx/",
+     "https://nginx.org/en/docs/http/websocket.html",
+     "http://trac.nginx.org/nginx/ticket/2625"
+    ],
+    "seconds": 2.7200014629997895,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://websocket.org/guides/infrastructure/nginx/",
+     "https://nginx.org/en/docs/http/websocket.html",
+     "http://trac.nginx.org/nginx/ticket/2625"
+    ],
+    "seconds": 0.895987908999814,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "systemd user unit service",
+   "expect": "freedesktop.org",
+   "python": {
+    "urls": [
+     "https://wiki.archlinux.org/title/Systemd/User",
+     "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html",
+     "https://www.mankier.com/8/systemd-xdg-autostart-generator"
+    ],
+    "seconds": 6.077783626999917,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://wiki.archlinux.org/title/Systemd/User",
+     "https://www.freedesktop.org/software/systemd/man/latest/systemd.service.html",
+     "https://www.mankier.com/8/systemd-xdg-autostart-generator"
+    ],
+    "seconds": 1.1897212149997358,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "postgresql jsonb index gin",
+   "expect": "postgresql.org",
+   "python": {
+    "urls": [
+     "https://www.postgresql.org/docs/current/gin.html",
+     "https://www.postgresql.org/",
+     "https://github.com/AxonFramework/AxonFramework/issues/1067"
+    ],
+    "seconds": 1.214922077000665,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://www.postgresql.org/docs/current/gin.html",
+     "https://www.postgresql.org/",
+     "https://en.wikipedia.org/wiki/PostgreSQL"
+    ],
+    "seconds": 1.166592409000259,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "redis persistence rdb aof",
+   "expect": "redis.io",
+   "python": {
+    "urls": [
+     "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+     "https://redis.io/tutorials/operate/redis-at-scale/persistence-and-durability/",
+     "https://redis.io/"
+    ],
+    "seconds": 2.251809116000004,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/",
+     "https://redis.io/tutorials/operate/redis-at-scale/persistence-and-durability/",
+     "https://marcusnoble.co.uk/2023-09-04-migrating-redis-data-within-kubernetes"
+    ],
+    "seconds": 6.009547062999445,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "kubectl port-forward service",
+   "expect": "kubernetes.io",
+   "python": {
+    "urls": [
+     "https://kubectl.docs.kubernetes.io/references/kubectl/port-forward/",
+     "https://phoenixnap.com/kb/kubectl-port-forward",
+     "https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/"
+    ],
+    "seconds": 1.2115867909997178,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://kubectl.docs.kubernetes.io/references/kubectl/port-forward/",
+     "https://phoenixnap.com/kb/kubectl-port-forward",
+     "https://kubernetes.io/docs/reference/kubectl/generated/kubectl_port-forward/"
+    ],
+    "seconds": 1.5440070879994892,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "terraform state mv command",
+   "expect": "terraform.io",
+   "python": {
+    "urls": [
+     "https://spacelift.io/blog/terraform-state-mv",
+     "https://ryaneschinger.com/blog/terraform-state-move/",
+     "https://developer.hashicorp.com/"
+    ],
+    "seconds": 1.0249992699991708,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://spacelift.io/blog/terraform-state-mv",
+     "https://ryaneschinger.com/blog/terraform-state-move/",
+     "https://developer.hashicorp.com/"
+    ],
+    "seconds": 0.8337385450004149,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "ansible become_user sudo",
+   "expect": "docs.ansible.com",
+   "python": {
+    "urls": [
+     "https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html",
+     "https://docs.ansible.com/projects/ansible/latest/index.html",
+     "https://blog.leocat.kr/notes/2018/12/04/ansible-become"
+    ],
+    "seconds": 1.5248565840001902,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_privilege_escalation.html",
+     "https://docs.ansible.com/projects/ansible/latest/collections/ansible/builtin/sudo_become.html",
+     "https://docs.ansible.com/projects/ansible/latest/index.html"
+    ],
+    "seconds": 6.006249725000089,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "tmux session detach attach",
+   "expect": "github.com/tmux/tmux",
+   "python": {
+    "urls": [
+     "https://tmux.app/sessions/",
+     "https://tmuxcheatsheet.com/",
+     "https://unix.stackexchange.com/q/24274"
+    ],
+    "seconds": 1.7314169010005571,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://tmux.app/sessions/",
+     "https://tmuxcheatsheet.com/",
+     "https://unix.stackexchange.com/q/24274"
+    ],
+    "seconds": 1.1267660189996604,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "ffmpeg extract audio mp3",
+   "expect": "ffmpeg.org",
+   "python": {
+    "urls": [
+     "https://cloudinary.com/guides/front-end-development/ffmpeg-extract-audio",
+     "https://4ddig.tenorshare.com/",
+     "https://toolio.pongvn.com/"
+    ],
+    "seconds": 1.0434534519999943,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://cloudinary.com/guides/front-end-development/ffmpeg-extract-audio",
+     "https://4ddig.tenorshare.com/",
+     "https://toolio.pongvn.com/"
+    ],
+    "seconds": 1.0371066380002958,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "imagemagick resize keep aspect ratio",
+   "expect": "imagemagick.org",
+   "python": {
+    "urls": [
+     "https://usage.imagemagick.org/resize/",
+     "https://stackoverflow.com/questions",
+     "https://forum.vivaldi.net/post/758708"
+    ],
+    "seconds": 2.689647377000256,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://usage.imagemagick.org/resize/",
+     "https://stackoverflow.com/questions",
+     "https://forum.vivaldi.net/post/758708"
+    ],
+    "seconds": 6.006087847999879,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "pandas merge on multiple columns",
+   "expect": "pandas.pydata.org",
+   "python": {
+    "urls": [
+     "https://pandas.pydata.org/docs/reference/api/pandas.merge.html",
+     "http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.merge.html",
+     "https://www.geeksforgeeks.org/pandas/merge-join-two-dataframes-on-multiple-columns-in-pandas/"
+    ],
+    "seconds": 1.2599054480006089,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://pandas.pydata.org/docs/reference/api/pandas.merge.html",
+     "http://www.gregreda.com/2013/10/26/working-with-pandas-dataframes/",
+     "http://pandas.pydata.org/pandas-docs/dev/reference/api/pandas.merge.html"
+    ],
+    "seconds": 0.9813562159997673,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "sqlalchemy relationship lazy loading",
+   "expect": "docs.sqlalchemy.org",
+   "python": {
+    "urls": [
+     "https://docs.sqlalchemy.org/en/21/orm/queryguide/relationships.html",
+     "https://en.wikipedia.org/wiki/SQLAlchemy",
+     "https://wilberhg.bearblog.dev/guia-pratico-sqlalchemy-20/"
+    ],
+    "seconds": 1.553527054999904,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.sqlalchemy.org/en/21/orm/queryguide/relationships.html",
+     "https://en.wikipedia.org/wiki/SQLAlchemy",
+     "https://wilberhg.bearblog.dev/guia-pratico-sqlalchemy-20/"
+    ],
+    "seconds": 0.9587599659998887,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "fastapi dependency injection yield",
+   "expect": "fastapi.tiangolo.com",
+   "python": {
+    "urls": [
+     "https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/",
+     "https://dev.indooroutdoor.io/fastapi-tips-and-tricks-testing-a-database",
+     "https://fastapi.tiangolo.com/"
+    ],
+    "seconds": 3.1110537530003057,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://fastapi.tiangolo.com/tutorial/dependencies/dependencies-with-yield/",
+     "https://dev.indooroutdoor.io/fastapi-tips-and-tricks-testing-a-database",
+     "https://fastapi.tiangolo.com/"
+    ],
+    "seconds": 6.005778103999546,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "django migrations squash",
+   "expect": "docs.djangoproject.com",
+   "python": {
+    "urls": [
+     "https://jacklinke.com/squashing-django-migrations-the-easy-way",
+     "https://velog.io/",
+     "https://www.geeksforgeeks.org/"
+    ],
+    "seconds": 1.1544911060000231,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://jacklinke.com/squashing-django-migrations-the-easy-way",
+     "https://velog.io/",
+     "https://www.geeksforgeeks.org/"
+    ],
+    "seconds": 0.855502204000004,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "react useEffect cleanup function",
+   "expect": "react.dev",
+   "python": {
+    "urls": [
+     "https://blog.logrocket.com/understanding-react-useeffect-cleanup-function/",
+     "https://reacttraining.com/blog/useEffect-cleanup",
+     "https://react.dev/reference/react/useEffect"
+    ],
+    "seconds": 1.959998798000015,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://blog.logrocket.com/understanding-react-useeffect-cleanup-function/",
+     "https://reacttraining.com/blog/useEffect-cleanup",
+     "https://react.dev/reference/react/useEffect"
+    ],
+    "seconds": 1.1000518310002008,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "typescript satisfies operator",
+   "expect": "typescriptlang.org",
+   "python": {
+    "urls": [
+     "https://www.freecodecamp.org/news/typescript-satisfies-operator/",
+     "https://schpet.com/linklog/typescript-satisfies-operator",
+     "https://www.typescriptlang.org/"
+    ],
+    "seconds": 6.078076188999148,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://www.freecodecamp.org/news/typescript-satisfies-operator/",
+     "https://schpet.com/linklog/typescript-satisfies-operator",
+     "https://www.typescriptlang.org/"
+    ],
+    "seconds": 0.8501008040002489,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "webpack tree shaking sideEffects",
+   "expect": "webpack.js.org",
+   "python": {
+    "urls": [
+     "https://webpack.js.org/guides/tree-shaking/",
+     "https://bitsofco.de/what-is-tree-shaking/",
+     "https://jaketrent.com/post/webpack-skip-css-import"
+    ],
+    "seconds": 0.9613760769998407,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://webpack.js.org/guides/tree-shaking/",
+     "https://bitsofco.de/what-is-tree-shaking/",
+     "https://github.com/ramda/ramda/issues/2355"
+    ],
+    "seconds": 0.948241517000497,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "css grid auto-fit minmax",
+   "expect": "developer.mozilla.org",
+   "python": {
+    "urls": [
+     "http://sarasoueidan.com/blog/auto-fill-auto-fit/",
+     "https://css-irl.info/to-grid-or-to-flex/",
+     "https://www.vzhurudolu.cz/prirucka/css-minmax"
+    ],
+    "seconds": 0.9831394030006777,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "http://sarasoueidan.com/blog/auto-fill-auto-fit/",
+     "https://css-irl.info/to-grid-or-to-flex/",
+     "https://www.vzhurudolu.cz/prirucka/css-minmax"
+    ],
+    "seconds": 0.9393427929999234,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "regex lookbehind python",
+   "expect": "docs.python.org",
+   "python": {
+    "urls": [
+     "http://python.org/sf/682432",
+     "https://robinwinslow.uk/regex",
+     "https://www.geeksforgeeks.org/"
+    ],
+    "seconds": 6.083773537000525,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "http://python.org/sf/682432",
+     "https://robinwinslow.uk/regex",
+     "https://www.geeksforgeeks.org/"
+    ],
+    "seconds": 0.9353067250003733,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "bash set -euo pipefail",
+   "expect": "gnu.org",
+   "python": {
+    "urls": [
+     "https://en.wikipedia.org/wiki/Bash_(Unix_shell)",
+     "https://codeinthehole.com/tips/bash-error-reporting/",
+     "https://www.gnu.org/software/bash/"
+    ],
+    "seconds": 1.2758157259995642,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://en.wikipedia.org/wiki/Bash_(Unix_shell)",
+     "https://codeinthehole.com/tips/bash-error-reporting/",
+     "https://www.gnu.org/software/bash/"
+    ],
+    "seconds": 0.910852595000506,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "openssl verify certificate chain",
+   "expect": "openssl.org",
+   "python": {
+    "urls": [
+     "https://community.letsencrypt.org/t/openssl-verify-error-on-full-chain/94735",
+     "https://www.openssl.org/",
+     "https://manpages.debian.org/bookworm/openssl/openssl-verify.1ssl"
+    ],
+    "seconds": 0.9272462649996669,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://www.openssl.org/",
+     "https://community.letsencrypt.org/t/openssl-verify-error-on-full-chain/94735",
+     "https://manpages.debian.org/bookworm/openssl/openssl-verify.1ssl"
+    ],
+    "seconds": 1.0329250889999457,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "ssh config proxyjump",
+   "expect": "openbsd.org",
+   "python": {
+    "urls": [
+     "http://www.ssh.com/ssh/agent",
+     "https://h3artbl33d.nl/blog/using-a-ssh-config",
+     "https://ko.linux-console.net/?p=2773"
+    ],
+    "seconds": 6.0758550749997084,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "http://www.ssh.com/ssh/agent",
+     "https://h3artbl33d.nl/blog/using-a-ssh-config",
+     "https://ko.linux-console.net/?p=2773"
+    ],
+    "seconds": 1.1198635190003188,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "wireshark display filter tcp port",
+   "expect": "wireshark.org",
+   "python": {
+    "urls": [
+     "https://www.wireshark.org/",
+     "https://wireshark.org/docs/dfref/",
+     "http://www.thegeekstuff.com/2012/07/wireshark-filter/"
+    ],
+    "seconds": 2.204118691000076,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://www.wireshark.org/",
+     "https://wireshark.org/docs/dfref/",
+     "http://coryklein.com/networking/wireshark/mysql/2015/11/30/deep-introspection-of-mysql-network-connection-packets-with-wireshark.html"
+    ],
+    "seconds": 1.6268245579994982,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "tcp congestion control cubic",
+   "expect": "ietf.org",
+   "python": {
+    "urls": [
+     "https://datatracker.ietf.org/doc/bibxml3/draft-handley-tcp-cwv-01.xml",
+     "https://blog.fernvenue.com/archives/tcp-congestion-control/",
+     "https://www.tutorialspoint.com/data_communication_computer_network/tcp_cubic_algorithm.htm"
+    ],
+    "seconds": 6.102927494999676,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://blog.fernvenue.com/archives/tcp-congestion-control/",
+     "https://datatracker.ietf.org/doc/bibxml3/draft-handley-tcp-cwv-01.xml",
+     "https://www.tutorialspoint.com/data_communication_computer_network/tcp_cubic_algorithm.htm"
+    ],
+    "seconds": 0.9829261080003562,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "transformer attention mechanism paper",
+   "expect": "arxiv.org",
+   "python": {
+    "urls": [
+     "https://vaclavkosar.com/ml/Performers-FAVOR+-Faster-Transformer-Attention",
+     "https://kazemnejad.com/blog/transformer_architecture_positional_encoding/",
+     "https://learnopencv.com/attention-mechanism-in-transformer-neural-networks/"
+    ],
+    "seconds": 0.8751143130002674,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://vaclavkosar.com/ml/Performers-FAVOR+-Faster-Transformer-Attention",
+     "https://kazemnejad.com/blog/transformer_architecture_positional_encoding/",
+     "https://learnopencv.com/attention-mechanism-in-transformer-neural-networks/"
+    ],
+    "seconds": 0.8424399169998651,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "bert fine-tuning huggingface",
+   "expect": "huggingface.co",
+   "python": {
+    "urls": [
+     "https://learnopencv.com/fine-tuning-bert/",
+     "https://velog.io/",
+     "https://www.kdnuggets.com/"
+    ],
+    "seconds": 0.8804652949993397,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://learnopencv.com/fine-tuning-bert/",
+     "https://velog.io/",
+     "https://www.kdnuggets.com/"
+    ],
+    "seconds": 0.9538797139994131,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "yolo object detection ultralytics",
+   "expect": "docs.ultralytics.com",
+   "python": {
+    "urls": [
+     "https://docs.ultralytics.com/",
+     "https://www.ultralytics.com/",
+     "https://pyimagesearch.com/2026/08/24/yolo26-open-vocabulary-object-detection-with-yoloe-26/"
+    ],
+    "seconds": 6.072960256999977,
+    "rc": 0,
+    "hit": true
+   },
+   "rust": {
+    "urls": [
+     "https://docs.ultralytics.com/",
+     "https://www.ultralytics.com/",
+     "https://pyimagesearch.com/2026/08/24/yolo26-open-vocabulary-object-detection-with-yoloe-26/"
+    ],
+    "seconds": 1.4210998910002672,
+    "rc": 0,
+    "hit": true
+   }
+  },
+  {
+   "query": "opencv read video frame python",
+   "expect": "docs.opencv.org",
+   "python": {
+    "urls": [
+     "https://opencv.org/",
+     "http://ch.mathworks.com/help/coder/nvidia/ref/videoread.html",
+     "https://github.com/opencv/opencv-python"
+    ],
+    "seconds": 1.1101437400002396,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "http://ch.mathworks.com/help/coder/nvidia/ref/videoread.html",
+     "https://opencv.org/",
+     "https://github.com/opencv/opencv-python"
+    ],
+    "seconds": 0.9444718389995614,
+    "rc": 0,
+    "hit": false
+   }
+  },
+  {
+   "query": "nvidia deepstream nvstreammux live-source",
+   "expect": "docs.nvidia.com",
+   "python": {
+    "urls": [
+     "https://www.nvidia.com/",
+     "https://devtalk.nvidia.com/t/memory-leak-using-new-nvstreammux/302336",
+     "https://forums.developer.nvidia.com/"
+    ],
+    "seconds": 1.1248046489999979,
+    "rc": 0,
+    "hit": false
+   },
+   "rust": {
+    "urls": [
+     "https://www.nvidia.com/",
+     "https://devtalk.nvidia.com/t/memory-leak-using-new-nvstreammux/302336",
+     "https://forums.developer.nvidia.com/"
+    ],
+    "seconds": 1.0143135090002033,
+    "rc": 0,
+    "hit": false
+   }
+  }
+ ],
+ "summary": [
+  {
+   "impl": "python",
+   "hit@3": 26,
+   "queries": 40,
+   "hit_rate": 0.65,
+   "success_rate": 1.0,
+   "median_seconds": 1.6424719780002306
+  },
+  {
+   "impl": "rust",
+   "hit@3": 26,
+   "queries": 40,
+   "hit_rate": 0.65,
+   "success_rate": 1.0,
+   "median_seconds": 1.0236192990000745
+  }
+ ]
+}

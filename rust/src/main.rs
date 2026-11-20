@@ -205,23 +205,28 @@ fn cmd_search(argv: &[String]) -> i32 {
             });
         }
         "github" => {
-            let mut left: Option<String> = None;
+            // `left` is only set by a call that answered, and the Python prints the last one it
+            // saw: a source that failed has no rate limit to report, and a missing header is the
+            // string "None" in both implementations rather than an invented number.
+            let mut left: Option<Option<String>> = None;
             let calls: [(&str, GhSearch); 2] =
                 [("repos", search::gh_repos), ("issues", search::gh_issues)];
             for (kind, fn_) in calls {
                 match fn_(&a.query, a.limit) {
                     Ok((got, remaining)) => {
-                        left = remaining;
+                        left = Some(remaining);
                         results.extend(got);
                     }
                     Err(e) => eprintln!("backend github-{}: {}", kind, e),
                 }
             }
             results.truncate(a.limit);
-            note = Some(format!(
-                "github rate limit remaining: {}",
-                left.unwrap_or_else(|| "unknown".into())
-            ));
+            if let Some(remaining) = left {
+                note = Some(format!(
+                    "github rate limit remaining: {}",
+                    remaining.unwrap_or_else(|| "None".into())
+                ));
+            }
         }
         "so" => match search::so_search(&a.query, a.limit) {
             Ok(r) => results = r,
