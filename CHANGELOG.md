@@ -2,6 +2,34 @@
 
 ## Unreleased
 
+## 0.2.1 - 2026-11-20
+
+Search quality over the same contract: no flag, format or exit code changed.
+
+### Changed
+
+- The web draw is re-ranked by documentation evidence before truncation: a docs host is the
+  strongest signal, a documentation path is a weak one, and a query term that begins a host
+  label is a medium one. Engine counts are never a score; they were measured harmful.
+- On comparison and opinion questions (13 whole-word markers, `vs` and `why` among them) the
+  evidence score changes sign, so a one-sided page is counter-evidence and stops burying the
+  pages that answer the question. Inert on every query without a marker.
+- The two SearXNG draws are merged and deduped instead of the longer one discarding the other,
+  so a rotating answer can no longer lose rows.
+- Scraped draws are accepted row by row, the scraper fallback triggers on thin answers (fewer
+  than three rows) and not only on empty ones, and the scraper path is paced like the rest.
+- Hostless urls (a scraped relative link) are dropped.
+
+### Dependencies
+
+- `scraper` 0.29.
+
+### Measured
+
+- 40 queries, hit at 3, one session: 23 before, 33 and 35 after the first change, 32 and 34
+  after the damp, no query falling to the change. Diagnostic and documentation queries probed
+  live and unchanged.
+
 ## 0.2.0 - 2026-11-20
 
 The crate is the project. `webscour` 0.2.0 is a keyless search CLI in one binary: a local SearXNG
