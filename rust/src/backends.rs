@@ -220,11 +220,7 @@ pub fn searx_web(query: &str, limit: usize, category: &str, verbose: bool) -> Re
         // merge is deduped and ranked, so the retry can no longer lose a row.
         let (again, dead2) = searx_ask(&params, verbose)?;
         got = merge_draws(got, again);
-        for name in dead2 {
-            if !dead.contains(&name) {
-                dead.push(name);
-            }
-        }
+        union_dead(&mut dead, dead2);
     }
     let pool = util::pick_on_topic(query, got);
     let got: Vec<Row> = util::rank(query, pool).into_iter().take(limit).collect();
@@ -243,6 +239,16 @@ pub fn merge_draws(first: Vec<Row>, second: Vec<Row>) -> Vec<Row> {
     let mut both = first;
     both.extend(second);
     util::dedupe(both)
+}
+
+/// The dead-engine list is the union of both draws: an engine that was down in either look
+/// is reported down once, in the order it was first seen.
+pub fn union_dead(dead: &mut Vec<String>, extra: Vec<String>) {
+    for name in extra {
+        if !dead.contains(&name) {
+            dead.push(name);
+        }
+    }
 }
 
 /// The SearXNG `news` category, tolerant: no local SearXNG is not an error for `--fresh`.
@@ -382,6 +388,14 @@ pub fn ua() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_dead_list_is_the_union_of_both_draws() {
+        let mut dead = vec!["qwant".to_string()];
+        union_dead(&mut dead, vec!["qwant".to_string(), "mojeek".to_string()]);
+        union_dead(&mut dead, vec!["brave".to_string()]);
+        assert_eq!(dead, vec!["qwant", "mojeek", "brave"]);
+    }
 
     const FIX: &str = r#"{
       "query": "asyncio cancellation",
