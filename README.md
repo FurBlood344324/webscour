@@ -25,9 +25,28 @@ whole stack; the only system binaries are the ones you choose to install for ren
 
 ## Install
 
+The Rust crate is the way in now: it is keyless search only, one binary, no Python and no system
+binaries to audit.
+
 ```bash
-pipx install webscour          # recommended: isolated, on PATH as `wsc`
-uvx webscour search "pyproject vs setup.py"   # no install at all
+cargo install webscour         # the crate is `webscour`, the binary is `wsc`
+```
+
+Rust 1.75 or newer. SearXNG stays optional and is still what makes `--source web` answer well; if
+you have the unit from the Python tool it keeps working, and `WEBSEARCH_SEARXNG` points the crate
+at any instance. `rust/README.md` has the sources, the flags and the evidence.
+
+### The Python install (retired)
+
+The `pipx`, `uvx`, `uv tool` and `pip` lines below still install the Python tool, and that tool
+still answers, but it is retired: the port is where the work goes and the Python entry point is
+being wound down. Use `cargo install webscour` instead. The tombstone note for the Python install
+(what it did, why it goes, what replaced it) lands with the removal, not before it, so this page is
+the whole story until that commit.
+
+```bash
+pipx install webscour          # retired: installs the Python tool, not the crate
+uvx webscour search "pyproject vs setup.py"   # retired for the same reason
 uv tool install webscour
 pip install --user webscour
 ```
