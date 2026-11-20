@@ -57,6 +57,8 @@ fn checks() -> Vec<Check> {
         ("searxng parse", searxng),
         ("searxng google unwrap", google_unwrap),
         ("drift filter", drift_filter),
+        ("rank order", rank_order),
+        ("hostless url", hostless_url),
         ("ddg lite", ddg_lite),
         ("ddg html", ddg_html),
         ("bing", bing),
@@ -124,6 +126,34 @@ fn searxng() -> Result<(), String> {
     want(util::related("asyncio cancellation", &rows[..1]), || "not related".into())?;
     want(!util::related("deepstream nvstreammux live-source", &rows[..1]), || {
         "unrelated query passed".into()
+    })
+}
+
+fn rank_order() -> Result<(), String> {
+    let rows = vec![
+        Row::raw("blog", "https://blog.example.org/serde", ""),
+        Row::raw("serde.rs", "https://serde.rs/attributes", ""),
+        Row::raw("docs", "https://docs.rs/serde/latest/serde", ""),
+        Row::raw("filler", "https://example.com/filler", ""),
+    ];
+    let got = util::rank("serde rename_all attribute", rows);
+    let titles: Vec<&str> = got.iter().map(|r| r.title.as_str()).collect();
+    want(titles == vec!["docs", "serde.rs", "blog", "filler"], || {
+        format!("{:?}", titles)
+    })?;
+    // the documentation host, the path mark and the host name are three, one and two
+    want(util::rank_score("serde rename_all attribute", "https://docs.serde.rs/api/x") == 6, || {
+        "the three rank weights do not add up".into()
+    })
+}
+
+fn hostless_url() -> Result<(), String> {
+    // brave's relative shells carry no authority: an empty url, which every caller drops
+    for href in ["http:///go/v1/abc", "https:///go/v1/abc", "/go/v1/abc"] {
+        want(net::unwrap_url(href).is_empty(), || format!("{} survived", href))?;
+    }
+    want(net::unwrap_url("https://example.net/b") == "https://example.net/b", || {
+        "a real url was dropped".into()
     })
 }
 

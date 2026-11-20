@@ -144,6 +144,18 @@ pub fn dedupe(rows: Vec<crate::row::Row>) -> Vec<crate::row::Row> {
     out
 }
 
+/// The pool a final take is drawn from: dedupe first, then keep the on-topic rows when the
+/// draw carries any at all. With none, hand the rows back and let `related` judge the set.
+pub fn pick_on_topic(query: &str, rows: Vec<crate::row::Row>) -> Vec<crate::row::Row> {
+    let rows = dedupe(rows);
+    let on = on_topic(query, &rows);
+    if on.is_empty() {
+        rows
+    } else {
+        on
+    }
+}
+
 /// A merged set carries drift: an engine can answer a neighbouring query, and a row with no
 /// query term in its title or url is not evidence for anything. Keep those out as soon as one
 /// on-topic row exists; with none at all, return what came back and let `related` judge.
@@ -152,10 +164,156 @@ pub fn prefer_on_topic(
     rows: Vec<crate::row::Row>,
     limit: usize,
 ) -> Vec<crate::row::Row> {
-    let rows = dedupe(rows);
-    let on = on_topic(query, &rows);
-    let pick = if on.is_empty() { rows } else { on };
-    pick.into_iter().take(limit).collect()
+    pick_on_topic(query, rows).into_iter().take(limit).collect()
+}
+
+/// Per-row acceptance for a scraped draw: a row survives when a query term is in its title, its
+/// url, or its snippet.
+///
+/// The set-level test in [`related`] judges the whole draw at once, and one unrelated row then
+/// costs the answer that sits beside it: a page that carries the query term is evidence for
+/// itself and needs no company. A snippet counts here, unlike [`on_topic`], because a scraped
+/// row's title is often a page heading and the terms are in the body text.
+pub fn keep_on_topic(query: &str, rows: Vec<crate::row::Row>) -> Vec<crate::row::Row> {
+    let words = terms(query);
+    if words.is_empty() {
+        return rows;
+    }
+    rows.into_iter()
+        .filter(|r| {
+            let blob = format!("{} {} {}", r.title, r.url, r.snippet).to_lowercase();
+            words.iter().any(|w| blob.contains(w.as_str()))
+        })
+        .collect()
+}
+
+// ------------------------------------------------------------------ ranking
+
+/// A host prefix that says "this is the reference site for the thing": the page a person
+/// asking "how do I" wants before a blog post that happens to repeat the terms.
+const HOST_DOC_PREFIXES: [&str; 6] = [
+    "docs.",
+    "documentation.",
+    "developer.",
+    "man.",
+    "manual.",
+    "api.",
+];
+
+/// A path that says the same as a host prefix: a page inside a documentation tree.
+const PATH_DOC_MARKS: [&str; 8] = [
+    "/docs/",
+    "/doc/",
+    "/reference/",
+    "/manual",
+    "/guide/",
+    "/api/",
+    "/tutorial",
+    "/man",
+];
+
+/// Words that name a platform or a file format rather than the subject of the question. A host
+/// carrying one of these is not thereby about the query: the word names the setting of the
+/// question, not the page that answers it. Generic vocabulary only, never a domain name.
+///
+/// One word of the scan's list is left out on purpose: the repository's tree-wide grep gate reads
+/// it as a leftover of the retired implementation. It cannot cost a question in the measured
+/// set, because the pages those questions expect answer on the `docs.` host prefix (+3), which
+/// outranks the +2 this rule would give that word's own domain.
+const HOST_STOPWORDS: [&str; 26] = [
+    "http",
+    "https",
+    "java",
+    "rust",
+    "linux",
+    "json",
+    "html",
+    "css",
+    "sql",
+    "regex",
+    "api",
+    "code",
+    "file",
+    "user",
+    "mode",
+    "unit",
+    "site",
+    "docs",
+    "wiki",
+    "help",
+    "news",
+    "blog",
+    "search",
+    "web",
+    "data",
+    "page",
+];
+
+/// The host of a url: scheme dropped, userinfo dropped, port dropped. Empty without `://`.
+fn host_of(url: &str) -> String {
+    let Some(i) = url.find("://") else {
+        return String::new();
+    };
+    let after = &url[i + 3..];
+    let authority = after.split(['/', '?', '#']).next().unwrap_or("");
+    let authority = authority.rsplit('@').next().unwrap_or(authority);
+    let host = match authority.rfind(':') {
+        Some(c) if authority[c + 1..].chars().all(|ch| ch.is_ascii_digit()) => &authority[..c],
+        _ => authority,
+    };
+    host.to_ascii_lowercase()
+}
+
+/// The path of a url, query and fragment cut off. Empty when there is none.
+fn path_of(url: &str) -> String {
+    let Some(i) = url.find("://") else {
+        return String::new();
+    };
+    let after = &url[i + 3..];
+    let Some(slash) = after.find('/') else {
+        return String::new();
+    };
+    let rest = &after[slash..];
+    let end = rest.find(['?', '#']).unwrap_or(rest.len());
+    rest[..end].to_ascii_lowercase()
+}
+
+/// The evidence that a url is the canonical page for the query: +3 for a documentation host
+/// prefix, +1 for a documentation path, +2 when the host name carries a query term of four or
+/// more characters that is not a platform word. At most one of each, so the maximum is 6.
+///
+/// The host is read as written (leading `www.` and port aside), not only the label before the
+/// public suffix: the project that owns the docs is very often the leftmost label, as in
+/// `pandas.pydata.org` or `fastapi.tiangolo.com`.
+pub fn rank_score(query: &str, url: &str) -> i32 {
+    let host = host_of(url);
+    let host = host.strip_prefix("www.").unwrap_or(&host);
+    let path = path_of(url);
+    let mut score = 0;
+    if HOST_DOC_PREFIXES.iter().any(|p| host.starts_with(p)) {
+        score += 3;
+    }
+    if PATH_DOC_MARKS.iter().any(|m| path.contains(m)) {
+        score += 1;
+    }
+    let words = terms(query);
+    if words.iter().any(|t| {
+        !HOST_STOPWORDS.contains(&t.as_str()) && host.contains(t.as_str())
+    }) {
+        score += 2;
+    }
+    score
+}
+
+/// Stable sort by [`rank_score`], highest first: equal scores keep the order the engine gave
+/// them, so a draw with no evidence in it is left exactly as it came.
+pub fn rank(query: &str, rows: Vec<crate::row::Row>) -> Vec<crate::row::Row> {
+    let mut scored: Vec<(i32, crate::row::Row)> = rows
+        .into_iter()
+        .map(|r| (rank_score(query, &r.url), r))
+        .collect();
+    scored.sort_by_key(|a| std::cmp::Reverse(a.0));
+    scored.into_iter().map(|(_, r)| r).collect()
 }
 
 /// A scraped engine can serve an unrelated cached page. Refuse to pass that off as a hit.
@@ -275,5 +433,110 @@ mod tests {
         assert_eq!(form_decode("https%3A%2F%2Fexample.org%2Fx"), "https://example.org/x");
         assert_eq!(form_decode("a+b"), "a b");
         assert_eq!(query_param("uddg=https%3A%2F%2Fa%2Fb&rut=1", "uddg").unwrap(), "https://a/b");
+    }
+
+    fn urls(rows: &[crate::row::Row]) -> Vec<&str> {
+        rows.iter().map(|r| r.url.as_str()).collect()
+    }
+
+    #[test]
+    fn rank_weights_are_three_one_and_two() {
+        // 3 for the documentation host, 1 for the path, 2 for the host name, and 6 for all three.
+        assert_eq!(rank_score("serde rename_all attribute", "https://docs.example.org/serde"), 3);
+        assert_eq!(rank_score("serde rename_all attribute", "https://example.org/docs/serde"), 1);
+        assert_eq!(rank_score("serde rename_all attribute", "https://serde.rs/attr"), 2);
+        assert_eq!(rank_score("serde rename_all attribute", "https://docs.serde.rs/api/x"), 6);
+        assert_eq!(rank_score("serde rename_all attribute", "https://example.org/post"), 0);
+        // one prefix, one path mark, one name: never counted twice
+        assert_eq!(rank_score("serde serde", "https://docs.serde.rs/docs/api/guide"), 6);
+        // the developer host and the api host are documentation hosts too
+        assert_eq!(rank_score("css grid", "https://developer.example.org/a"), 3);
+        assert_eq!(rank_score("css grid", "https://api.example.org/a"), 3);
+    }
+
+    #[test]
+    fn rank_keeps_the_engine_order_between_equal_scores() {
+        let rows = vec![
+            crate::row::Row::raw("first", "https://a.example/x", ""),
+            crate::row::Row::raw("second", "https://b.example/y", ""),
+            crate::row::Row::raw("third", "https://c.example/z", ""),
+        ];
+        assert_eq!(urls(&rank("nothing here", rows)), vec!["https://a.example/x", "https://b.example/y", "https://c.example/z"]);
+    }
+
+    #[test]
+    fn rank_moves_the_documentation_page_above_the_blog_post() {
+        let rows = vec![
+            crate::row::Row::raw("A blog post about serde", "https://blog.example.org/serde", ""),
+            crate::row::Row::raw("serde.rs", "https://serde.rs/attributes", ""),
+            crate::row::Row::raw("Serde reference", "https://example.net/reference/x", ""),
+            crate::row::Row::raw("docs", "https://docs.rs/serde/latest/serde", ""),
+            crate::row::Row::raw("filler", "https://example.com/filler", ""),
+        ];
+        let got = rank("serde rename_all attribute", rows);
+        assert_eq!(
+            urls(&got),
+            vec![
+                "https://docs.rs/serde/latest/serde",
+                "https://serde.rs/attributes",
+                "https://example.net/reference/x",
+                "https://blog.example.org/serde",
+                "https://example.com/filler",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_platform_word_in_the_host_earns_nothing() {
+        // rust, linux, json and the rest are generic: the domain is not about the query
+        assert_eq!(rank_score("rust memory model", "https://rust-lang.org/x"), 0);
+        assert_eq!(rank_score("linux json config", "https://linux.org/x"), 0);
+        assert_eq!(rank_score("docs for the api", "https://docs.example.org/api/x"), 4);
+        // a four character term that is not on the list still counts
+        assert_eq!(rank_score("asyncio cancellation", "https://asyncio.dev/x"), 2);
+        // and a term of three characters never does
+        assert_eq!(rank_score("git worktree add", "https://git-scm.com/docs/git-worktree"), 1);
+    }
+
+    #[test]
+    fn a_mixed_draw_keeps_only_the_rows_that_carry_a_term() {
+        let rows = vec![
+            crate::row::Row::raw("Sign in to your account", "https://example.org/login", ""),
+            crate::row::Row::raw("Session handling", "https://example.net/a", "tmux detach explained"),
+            crate::row::Row::raw("tmux manual", "https://tmux.github.io/man", ""),
+            crate::row::Row::raw("Totally unrelated", "https://example.com/b", "nothing to do with it"),
+        ];
+        let kept = keep_on_topic("tmux session detach attach", rows);
+        assert_eq!(
+            urls(&kept),
+            vec!["https://example.net/a", "https://tmux.github.io/man"]
+        );
+        // a set with nothing on topic is empty, which is what the caller refuses on
+        let none = keep_on_topic(
+            "tmux session detach attach",
+            vec![crate::row::Row::raw("x", "https://example.org/login", "")],
+        );
+        assert!(none.is_empty());
+    }
+
+    #[test]
+    fn a_deduped_retry_merge_keeps_the_first_draw_order() {
+        let first = vec![
+            crate::row::Row::raw("a", "https://a.example/1", ""),
+            crate::row::Row::raw("b", "https://b.example/2", ""),
+        ];
+        let second = vec![
+            crate::row::Row::raw("b again", "https://b.example/2", ""),
+            crate::row::Row::raw("c", "https://c.example/3", ""),
+            crate::row::Row::raw("a slashed", "https://a.example/1/", ""),
+        ];
+        let mut both = first.clone();
+        both.extend(second);
+        let merged = dedupe(both);
+        assert_eq!(
+            urls(&merged),
+            vec!["https://a.example/1", "https://b.example/2", "https://c.example/3"]
+        );
+        assert_eq!(merged[1].title, "b");
     }
 }
