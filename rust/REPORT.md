@@ -155,3 +155,27 @@ Not ported (out of the brief's scope, and their destination is Firecrawl Local):
 3d32913 feat(rust): port the keyless search half as crate webscour, binary wsc
 146622d docs(changelog): one 0.1.3 section, and it names the pages fix (#13)
 ```
+
+## Review round (caller, 2026-11-20)
+
+Independent review (GLM 5.3, thinking max) returned approve-with-notes; the caller verified the
+load-bearing findings first-hand and fixed them directly — all small and localized, no loop-back
+delegate needed:
+
+1. should-fix — `strip_tags` no longer unescapes; only the rss path unescapes, matching the Python
+   contract. `--source wikipedia "Bill & Ted"` now diffs clean against the Python.
+2. should-fix — net body is read as bytes and decoded with replacement (`from_utf8_lossy`); a
+   latin-1 mock title answers rc 0 with a replacement char like the Python, instead of killing
+   the whole backend with "stream did not contain valid UTF-8".
+3. should-fix — `--category` is validated against the seven choices; invalid → usage error rc 2.
+4. should-fix (release blocker) — LICENSE copied into `rust/` so `cargo publish` ships the text.
+5. note — `--flag=value` accepted (argparse parity): `wsc search ureq --source=github` works.
+8. note — wayback source timeout 30 s → 15 s, matching the Python.
+9. note — npm `repository` as a bare string is ignored and the homepage is used, matching the
+   Python.
+
+Correction to the build report: "19 sources diffed … all identical" was overbroad — the Python
+kept escaped entities in wikipedia snippets and this port unescaped them before this round.
+Notes 6 and 7 (-v accepted, `--version` 0.2.0 vs 0.1.3) are accepted as-is.
+
+After the round: `cargo test` 41+5+11 passing, clippy clean, `--self-test` all checks passed.

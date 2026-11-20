@@ -86,6 +86,19 @@ struct SearchArgs {
 }
 
 fn parse_search(argv: &[String]) -> Result<SearchArgs, String> {
+    let mut tokens: Vec<String> = Vec::with_capacity(argv.len());
+    // argparse accepts `--flag=value`; expand every such token into `--flag value` before the
+    // loop, so no flag needs its own equals-form handling. A word containing '=' without a
+    // leading `--` is query text and passes through untouched.
+    for t in argv {
+        if let Some(eq) = t.find('=').filter(|&e| t[..e].starts_with("--")) {
+            tokens.push(t[..eq].to_string());
+            tokens.push(t[eq + 1..].to_string());
+        } else {
+            tokens.push(t.clone());
+        }
+    }
+    let argv: &[String] = &tokens;
     let mut a = SearchArgs {
         query: String::new(),
         source: "web".into(),
@@ -138,6 +151,13 @@ fn parse_search(argv: &[String]) -> Result<SearchArgs, String> {
     }
     if a.query.trim().is_empty() {
         return Err("a query is required (wsc search \"<query>\" [--source SRC] [--limit N])".into());
+    }
+    if !a.category.is_empty() && !sources::CATEGORIES.contains(&a.category.as_str()) {
+        return Err(format!(
+            "invalid --category {:?} (choose from: {})",
+            a.category,
+            sources::CATEGORIES.join(", ")
+        ));
     }
     Ok(a)
 }
