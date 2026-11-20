@@ -1,9 +1,8 @@
 //! The structured endpoints: GitHub, Stack Overflow, Hacker News, arXiv's Atom feed, Discourse.
 //!
 //! Every parser here is pure - a `serde_json::Value` or a feed string in, rows out - so the
-//! fixture tests and `--self-test` exercise them with no network. This is the same rule the
-//! Python follows, and the reason a parser can be checked at all when the endpoint is having a
-//! bad afternoon.
+//! fixture tests and `--self-test` exercise them with no network, which is the reason a parser
+//! can be checked at all when the endpoint is having a bad afternoon.
 //!
 //! Row shape is `Row::raw`: these sources return what the page gave, and the renderer cuts it.
 
@@ -278,7 +277,7 @@ fn squeeze(text: &str) -> String {
     text.split_whitespace().collect::<Vec<_>>().join(" ")
 }
 
-/// A JSON number as the Python's `%s` would print it: no `.0` on an integer.
+/// A JSON number as text: no `.0` on an integer.
 pub fn js_num(v: &Value) -> String {
     match v {
         Value::Number(n) => {

@@ -1,7 +1,7 @@
 //! The web backend: a local SearXNG first, then the three scrapers, and the pacing around them.
 //!
 //! SearXNG is one loopback call, so it is cheap and it is first. When it is down or answers
-//! nothing, the scrapers run in the Python's order - DDG lite, DDG html, Bing - because that is
+//! nothing, the scrapers run in a fixed order - DDG lite, DDG html, Bing - because that is
 //! the order someone actually got a page from, and the first one that answers ends the chain.
 //! A circuit that silently skipped a backend would report an empty web instead of a closed door,
 //! so each failure is one line on stderr.
@@ -301,7 +301,7 @@ fn check_blocked(page: &str) -> Result<(), FetchError> {
 }
 
 /// The whole web chain: SearXNG (unless a category rules the scrapers out), then the fallbacks
-/// in the Python's order. `warn` is where each lost backend is reported.
+/// in that same order. `warn` is where each lost backend is reported.
 pub fn web_search<W: FnMut(&str)>(
     query: &str,
     limit: usize,

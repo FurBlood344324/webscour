@@ -15,10 +15,10 @@
 
 ## Does it add a dependency?
 
-<!-- It must not: `dependencies = []` is the first promise, and `scripts/check.sh` enforces it. -->
+<!-- It must not, unless the fifth crate is argued in the Decisions table in `rust/REPORT.md`. -->
 
 ## Checklist
 
-- [ ] `./scripts/check.sh` passes locally
+- [ ] `cargo test --release` and `cargo clippy --release --all-targets` pass locally
 - [ ] No em dash and no emoji in the prose or the output
-- [ ] If this is a design choice, the reasoning is in `docs/decisions/`
+- [ ] If this is a design choice, the reasoning is in `rust/REPORT.md` or the commit message

@@ -1,13 +1,13 @@
 //! The keyless sources: one free endpoint per kind of question.
 //!
-//! Each is two things in one place, as in the Python: a pure parser (JSON or feed in, rows out)
+//! Each is two things in one place: a pure parser (JSON or feed in, rows out)
 //! and the one request that feeds it. The parsers are pure so `--self-test` exercises them with
 //! no network - the same rule `search.rs` and `html.rs` follow.
 //!
 //! Every endpoint here was measured before it was ported: no key, no login, a 200 and a body
 //! with the fact in it. The sources that failed that test (Reddit 403, Semantic Scholar 429
-//! without a key, GDELT 429, Openverse 403, Mojeek 403, Marginalia's bot wall) are listed in
-//! `docs/routing.md` in the Python tree so nobody spends an afternoon rediscovering them.
+//! without a key, GDELT 429, Openverse 403, Mojeek 403, Marginalia's bot wall) are listed here
+//! so nobody spends an afternoon rediscovering them.
 //!
 //! Row shape is the same everywhere: title, url, snippet, plus `published` when the source really
 //! carries a publication date. Nothing invents one: a Wikipedia article has no publication date,
@@ -99,7 +99,7 @@ pub const MONTHS: [&str; 12] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-/// Strip every `<...>` tag. Entities are left as they are: the Python contract unescapes only
+/// Strip every `<...>` tag. Entities are left as they are: the contract unescapes only
 /// in the rss path, which calls `html_unescape` itself; every other source prints the raw text.
 pub fn strip_tags(text: &str) -> String {
     let mut out = String::new();
@@ -852,7 +852,7 @@ pub fn crates(query: &str, _limit: usize) -> Result<Vec<Row>, FetchError> {
     Ok(parse_crates(&doc))
 }
 
-/// dev.to has tags, not full text: the query becomes one tag (`python`, `asyncio`).
+/// dev.to has tags, not full text: the query becomes one tag (`rust`, `async`).
 pub fn devto(query: &str, limit: usize) -> Result<Vec<Row>, FetchError> {
     let tag: String = first_word(query)
         .chars()
@@ -997,7 +997,7 @@ pub fn merge_fresh(rows: Vec<Row>, limit: usize, since: &str) -> Vec<Row> {
 }
 
 /// One feed the caller named: `rss:<url>`, parsed with the same RSS/Atom reader the news
-/// sources use, and cut to `limit`. The Python has no such source; this is the smallest way to
+/// sources use, and cut to `limit`. This is the smallest way to
 /// let a caller point the tool at a feed the tables have never heard of, and it is one request.
 pub fn rss_url(url: &str, limit: usize) -> Result<Vec<Row>, FetchError> {
     let resp = net::http(url, None, None, net::TIMEOUT)?;
@@ -1222,7 +1222,7 @@ convolutional neural networks. </summary>
             Row::dated("same url", "https://a/1#frag", "", "2026-11-11"),
             Row::dated("too old", "https://a/2", "", "2026-11-01"),
         ];
-        // First occurrence wins, the same as the Python: the merge is first-seen-wins on the
+        // First occurrence wins: the merge is first-seen-wins on the
         // url before it is sorted, so a fragment cannot smuggle a second copy in.
         let got = merge_fresh(rows.clone(), 5, "2026-11-01");
         assert_eq!(

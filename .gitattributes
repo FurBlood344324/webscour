@@ -7,12 +7,8 @@
 # to learn that a checkout was configured wrong.
 *.sh text eol=lf
 
-# `-diff`: these are evidence, not prose. A page captured from a remote server and a JSON baseline
-# are read by the tests as bytes and compared as numbers; a line-by-line diff of them in a pull
-# request is noise that hides the file next to it. The attribute only changes what git shows, so a
-# whitespace-only change is still a change and still has to be justified.
-tests/baselines/*.json -diff
-tests/markdown/**/*.md -diff
-
-# The captured pages the benchmark and the parsers run against: same reason, and they are large.
-tests/fixtures/**/*.html -diff
+# `-diff`: these are evidence, not prose. A page captured from a remote server is read by the
+# tests as bytes; a line-by-line diff of it in a pull request is noise that hides the file next to
+# it. The attribute only changes what git shows, so a whitespace-only change is still a change and
+# still has to be justified.
+rust/tests/fixtures/**/*.html -diff

@@ -1,96 +1,77 @@
 # Contributing
 
-`webscour` is a small tool with a hard constraint, so most of this file is about that constraint.
-Read the layout before writing code; the rest is procedure.
+`webscour` is one Rust crate with a hard constraint: one binary, four direct dependencies, keyless
+search only. Read the layout before writing code; the rest is procedure.
 
 ## Setup
 
 ```bash
-git clone https://github.com/FurBlood344324/webscour && cd webscour
-python3 -m venv .venv-dev && .venv-dev/bin/pip install ruff build twine
-python3 -m unittest discover -s tests      # the unit tests, offline, a few seconds
-./scripts/check.sh                         # the gate: lint, format, tests, self-test, build, guards
+git clone https://github.com/FurBlood344324/webscour && cd webscour/rust
+cargo test --release                       # the unit tests and the fixture suite, offline
+cargo clippy --release --all-targets       # must be 0 warnings
+./target/release/wsc --self-test           # 35 checks, compiled in
 ```
 
-`check.sh` is the definition of releasable and the workflows only call it. `BENCH=1
-./scripts/check.sh` adds the extraction benchmark, which needs the network and is therefore not
-part of the default run. Python 3.11 is the floor.
+Rust 1.75 is the floor. `cargo test` is offline; nothing in the suite opens a socket, because the
+fixtures are captured payloads read from disk.
 
 ## The layout
 
-The import graph is one way: `extract` <- `backends` <- `searx` <- `cli`. Four modules carry the
-promise; a few more hang off them.
+The module graph is one way: `row` and `util` ← `net` ← `html`, `search`, `sources` ← `backends` ←
+`selftest`, `main`.
 
-- **`extract.py`** turns bytes into text: the tokenizer, the reading-tree pruning, the result
-  parsers, the sitemap and robots readers, the document router. It must import no network module,
-  and `tests/test_extract.py` enforces that by importing it with `socket`, `ssl` and `http`
-  blocked. If your change needs to open a connection, it does not belong here.
-- **`backends.py`** is everything that talks to the network: the HTTP client, SearXNG, the
-  fallback scrapers, the render engines, and the pacing that keeps them polite.
-- **`searx.py`** owns the search-backend lifecycle: install, measure, check. It shells out to the
-  scripts in `searx/` rather than reimplementing them, because two implementations of "is SearXNG
-  healthy" would drift and `wsc doctor` promises exactly one verdict.
-- **`cli.py`** is the argv surface: verbs, flags, printing, exit codes. Nothing there opens a
-  socket itself.
-
-Around them: **`sources.py`** holds the keyless `--source` endpoints, parser and request together;
-**`routes.py`** maps a URL to a structured endpoint the site already publishes; **`argv.py`** is
-the single mapping from a JSON tool call to an argv, shared by the MCP server and the pi
-extension; **`cache.py`** is the opt-in page store; **`render_venv.py`** owns one thing, the
-optional playwright environment under `~/.local/share/webscour/render-venv`, created by
-`wsc setup --playwright` and by nothing else.
+- **`row.rs`** is the output: `Row`, the two clipping styles (`...` at parse, `…` at render) and
+  the text renderer. The keys are title, url, snippet, engines, published, in that order.
+- **`util.rs`** is the pure helpers: URL quoting and decoding, `terms`, `on_topic`, `related`,
+  `dedupe`, `prefer_on_topic`, and the shared pace file that keeps one live query per second across
+  processes.
+- **`net.rs`** is everything that talks to the network: one blocking HTTP call, `FetchError`
+  carrying the status, header echo, and the JSON helpers. `html.rs`, `search.rs`, `sources.rs` and
+  `backends.rs` call into it.
+- **`html.rs`** holds the three SERP parsers over the HTML5 tree, one pass per field.
+- **`search.rs`** holds the sources that answer a search endpoint: github repositories and issues,
+  Stack Exchange, HN, arXiv, Discourse.
+- **`sources.rs`** holds the keyless `--source` values, each as a pure parser plus its one request,
+  and the parser table the router uses.
+- **`backends.rs`** owns the `web` chain: SearXNG first, then DDG lite, DDG html, Bing.
+- **`main.rs`** is the argv surface: one verb, the flags, printing, exit codes. Nothing there opens
+  a socket itself.
+- **`selftest.rs`** compiles the fixtures in with `include_str!`, so a built binary proves itself.
 
 ## Adding a source
 
 A source is a `--source` value that answers one query; its parser and its request live together in
-`sources.py` on purpose. Five steps, in this order:
+`sources.rs` on purpose. Five steps, in this order:
 
-1. Write the parser: a decoded document (a `dict`, a `str`, or XML) in, rows of
+1. Write the parser: a decoded document (JSON, XML, or a string) in, rows of
    `title`/`url`/`snippet` out, plus `published` only when the source really carries a date. Pure,
    no I/O and no clock.
-2. Write the one request beside it using `http` from `backends.py`, then add the name to
-   `API_SOURCES` and `FETCHERS`. A source that reports a rate-limit number should hand it back so
-   `cmd_search` can print it.
-3. Document the name: a row in `docs/sources.md` and in the `README.md` source table.
+2. Write the one request beside it, register the name in the parser table, and let a source that
+   reports a rate-limit number hand it back so `main.rs` can print it.
+3. Document the name: a row in the source table in `README.md` and in `rust/README.md`.
 4. Capture a real response, trimmed to two or three rows, into `tests/fixtures/`, and add a unit
    test beside it. A fixture typed by hand is not a fixture.
-5. Add a `chk(...)` to `--self-test` so the parser is covered offline, then run the gate.
+5. Add a check to `--self-test` so the parser is covered offline, then run the gate.
 
 Keyless, unauthenticated sources are the default. A source that needs a key is a different
-conversation: open a source request issue first, and read the rejection list below.
+conversation: open a source request issue first.
 
-## Adding a site route
+## Tests
 
-A route is a decision about a URL before any download, and there are two kinds. `routes.py` takes
-a URL to an endpoint the site already publishes: add a `Route(...)` to `ROUTES` and a resolver
-that returns markdown, never HTML. `extract.py` decides a document format (`document_format`), and
-`cmd_fetch` branches on it, so a `.pdf` goes through the local document extractor while an `.html`
-stays HTML and keeps the js-shell heuristic.
+`cargo test --release` runs three targets: the lib tests (pure parsers, `row`, `util`, `search`,
+`backends`), the bin tests (argv and limits) and `tests/fixtures_test.rs`, which reads the same
+fixtures from disk that `selftest.rs` embeds. A fixture must pass both paths, so a change that only
+one of them sees is a bug.
 
-Two rules. A route that raises `FetchError` is a fallback, never a failure, and `-v` says which
-route declined. A route that fires too eagerly is worse than no route: it takes a page away from
-the generic extractor, which is usually right.
-
-## Changing the extraction rules
-
-Extraction is measured, not argued. Run the benchmark, read the table, and say what moved:
-
-```bash
-python3 tests/bench_extract.py                          # offline, against the captured pages
-python3 tests/bench_extract.py --live                   # re-fetch the pages first
-python3 tests/bench_extract.py --save-baseline tests/baselines/<next-version>.json
-```
-
-The numbers are bytes, lines and a precision proxy, plus a `phrases` recall gate per page that
-must not lose a string whatever the byte count says. A pull request that changes a rule states the
-per-page diff and updates the baseline in the same commit. Do not lower the bar quietly:
-`--tolerance` defaults to 10 percent and raising it is a decision, not a fix.
+`wsc --self-test` runs the same parsers against the captured payloads with no network. It is what a
+user runs to prove an installed binary, and it must stay at 35 checks or more.
 
 ## Decision records
 
-A choice with real alternatives gets a file in `docs/decisions/`, numbered and not rewritten after
-the fact: context, options considered, the choice, the evidence. `0001` through `0005` show the
-shape. A change a future reader will ask "why on earth" about needs one; a typo does not.
+A choice with real alternatives goes in the commit message, and when it changes the row shape or
+the output bytes it also goes into the Decisions table in `rust/REPORT.md`: context, the
+alternatives, the choice, the evidence. A change a future reader will ask "why on earth" about needs
+one; a typo does not.
 
 ## Commits
 
@@ -101,19 +82,18 @@ version as "safe to upgrade".
 
 ## What will be rejected
 
-- A Python dependency. `dependencies = []` is the first promise, `0001` records why, and the gate
-  fails the build for it.
-- A paid API that is required rather than optional. Optional already happens (playwright lives in
-  its own venv); required makes this a different tool.
+- A dependency that is not justified in the Decisions table. Four crates is the promise; a fifth is
+  a conversation, not a patch, and a runtime or a second TLS stack is the shortest way to lose it.
+- A paid API that is required rather than optional. A keyless source is the default; a required key
+  makes this a different tool.
 - A change that breaks the honesty of the README's limitations section. Where the scrapers degrade
   on a residential IP, the README says so with a date and a number. Deleting the sentence is the
   one edit that is never merged.
 
-Three prose rules the gate enforces: no em dash, no emoji, no absolute home path in a shipped
+Three prose rules the repository enforces: no em dash, no emoji, no absolute home path in a shipped
 file. Say what was measured, and paste the output rather than describing it.
 
 ## Where to ask
 
-Open an issue with the feature request form and say it is a question, including what you tried.
-For anything that should not be public, write to `maintainer@wsc.ashina.live`. The release process
-is in [docs/maintaining.md](docs/maintaining.md).
+Open an issue with the feature request form and say it is a question, including what you tried. For
+anything that should not be public, write to `maintainer@wsc.ashina.live`.

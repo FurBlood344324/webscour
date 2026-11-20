@@ -1,12 +1,6 @@
-__pycache__/
-*.py[cod]
-*.egg-info/
-build/
-dist/
-.venv/
-.venv-dev/
-.ruff_cache/
-.pytest_cache/
-.coverage
-htmlcov/
+# Build output. rust/.gitignore covers /target from inside the crate as well.
+target/
+
+# Scratch space for agents and worktrees.
 .agent-out/
+.wt/

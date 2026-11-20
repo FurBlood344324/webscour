@@ -2,12 +2,12 @@
 # a command and a version is a conversation, not a bug. A question has a place below.
 blank_issues_enabled: false
 contact_links:
-  - name: How fetching decides what to do with a URL
-    url: https://github.com/FurBlood344324/webscour/blob/main/docs/routing.md
-    about: Read this before filing a bug about a 403, a CAPTCHA, a PDF or a JavaScript page.
+  - name: Which source answers which question
+    url: https://github.com/FurBlood344324/webscour/blob/main/rust/README.md
+    about: Read this before filing a bug about a 403, a CAPTCHA or a source that answered nothing.
   - name: Contributing, and what will be rejected
     url: https://github.com/FurBlood344324/webscour/blob/main/CONTRIBUTING.md
-    about: The module layout, the test command, the benchmark, and the dependency rule.
+    about: The module layout, the test commands and the dependency rule.
   - name: Code of Conduct
     url: https://github.com/FurBlood344324/webscour/blob/main/CODE_OF_CONDUCT.md
     about: Applies to issues, pull requests and every other space this project uses.
