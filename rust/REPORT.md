@@ -1,4 +1,4 @@
-# rust-search — report
+# rust-search - report
 
 Branch `rust-search` in worktree `.wt/rust-search`. Nothing outside the worktree was touched;
 no push, no publish.
@@ -15,7 +15,7 @@ no push, no publish.
 | `rust/src/net.rs` | one blocking HTTP call, `FetchError` with status, header echo, `render`/`render_json` |
 | `rust/src/html.rs` | DDG lite / DDG html / Bing parsers over the HTML5 tree |
 | `rust/src/backends.rs` | `parse_searxng`, searx start-and-retry, the web fallback chain, `searx_news` |
-| `rust/src/search.rs` | github repos+issues, so, hn, arxiv (Atom), discourse — parsers + requests |
+| `rust/src/search.rs` | github repos+issues, so, hn, arxiv (Atom), discourse - parsers + requests |
 | `rust/src/sources.rs` | the 14 keyless API sources + `rss:<url>`, `merge_fresh`/`fresh`, parser table |
 | `rust/src/selftest.rs` | `wsc --self-test`: 35 checks, fixtures compiled in with `include_str!` |
 | `rust/src/main.rs` | argv, `search`, exit codes, github rate-limit note |
@@ -81,7 +81,7 @@ $ wsc search --source github "ureq" --limit 3
 -- github rate limit remaining: 9
 ```
 
-Byte-compat spot checks (Python vs Rust, same query, 1 q/s apart — `diff` silent):
+Byte-compat spot checks (Python vs Rust, same query, 1 q/s apart - `diff` silent):
 `so`, `wikipedia`, `crates`, `pypi`, `npm`, `hn`, `arxiv`, `crossref`, `openalex`, `europepmc`,
 `pubmed`, `devto`, `wayback`, `googlenews`, `bbc`, `discourse:…nvidia…`, `--fresh`, and
 `--json` on github and on the web path.
@@ -134,7 +134,7 @@ Run #1, before the fixes, was python 22/40 · rust 22/40 · 36/40 agreement. Bot
 | Hand-rolled argv | One verb, six flags, and the exit codes are part of the contract (`0` answered, `2` usage/no answer, `1` help with no verb). |
 | No tokio/reqwest | A runtime and a TLS stack for a CLI that makes a handful of sequential calls. |
 | `--json` hand-written | `indent=1` and insertion order are part of the output; `to_string_pretty` gets neither. Verified by diff. |
-| `fetcher()` split from `fetch()` | A table check that had to call the fetcher put 13 live requests in a test run — the scraper habit the tool exists to avoid. |
+| `fetcher()` split from `fetch()` | A table check that had to call the fetcher put 13 live requests in a test run - the scraper habit the tool exists to avoid. |
 | DDG html scoped to `div.result` | Flat-list pairing hands a snippetless row its neighbour's snippet; the container is right, the flat pass is kept as a fallback shape. |
 | `rss:<url>` added | Named in the brief with no Python counterpart; one request, the same reader as the news sources. |
 | Everything else copied, not improved | Numbers, clip lengths, the `...` vs `…` split, the drift filter's "keep all if nothing is on topic", the pace file path, `(score N)` in SO titles. |
@@ -159,22 +159,22 @@ Not ported (out of the brief's scope, and their destination is Firecrawl Local):
 ## Review round (caller, 2026-11-20)
 
 Independent review (GLM 5.3, thinking max) returned approve-with-notes; the caller verified the
-load-bearing findings first-hand and fixed them directly — all small and localized, no loop-back
+load-bearing findings first-hand and fixed them directly - all small and localized, no loop-back
 delegate needed:
 
-1. should-fix — `strip_tags` no longer unescapes; only the rss path unescapes, matching the Python
+1. should-fix - `strip_tags` no longer unescapes; only the rss path unescapes, matching the Python
    contract. `--source wikipedia "Bill & Ted"` now diffs clean against the Python.
-2. should-fix — net body is read as bytes and decoded with replacement (`from_utf8_lossy`); a
+2. should-fix - net body is read as bytes and decoded with replacement (`from_utf8_lossy`); a
    latin-1 mock title answers rc 0 with a replacement char like the Python, instead of killing
    the whole backend with "stream did not contain valid UTF-8".
-3. should-fix — `--category` is validated against the seven choices; invalid → usage error rc 2.
-4. should-fix (release blocker) — LICENSE copied into `rust/` so `cargo publish` ships the text.
-5. note — `--flag=value` accepted (argparse parity): `wsc search ureq --source=github` works.
-8. note — wayback source timeout 30 s → 15 s, matching the Python.
-9. note — npm `repository` as a bare string is ignored and the homepage is used, matching the
+3. should-fix - `--category` is validated against the seven choices; invalid → usage error rc 2.
+4. should-fix (release blocker) - LICENSE copied into `rust/` so `cargo publish` ships the text.
+5. note - `--flag=value` accepted (argparse parity): `wsc search ureq --source=github` works.
+8. note - wayback source timeout 30 s → 15 s, matching the Python.
+9. note - npm `repository` as a bare string is ignored and the homepage is used, matching the
    Python.
 
-Correction to the build report: "19 sources diffed … all identical" was overbroad — the Python
+Correction to the build report: "19 sources diffed … all identical" was overbroad - the Python
 kept escaped entities in wikipedia snippets and this port unescaped them before this round.
 Notes 6 and 7 (-v accepted, `--version` 0.2.0 vs 0.1.3) are accepted as-is.
 
