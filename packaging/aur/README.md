@@ -1,8 +1,8 @@
-# AUR staging — not submitted
+# AUR staging - not submitted
 
 AUR registration is closed at the moment (2026-11-20). This directory is staged so that submission is
 one short session when it opens. **No CI**: releases are cut by hand and this package is updated by hand
-per release — no GitHub Actions, no automation.
+per release - no GitHub Actions, no automation.
 
 Per-release checklist:
 

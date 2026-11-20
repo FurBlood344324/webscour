@@ -1,6 +1,6 @@
 //! The structured endpoints: GitHub, Stack Overflow, Hacker News, arXiv's Atom feed, Discourse.
 //!
-//! Every parser here is pure — a `serde_json::Value` or a feed string in, rows out — so the
+//! Every parser here is pure - a `serde_json::Value` or a feed string in, rows out - so the
 //! fixture tests and `--self-test` exercise them with no network. This is the same rule the
 //! Python follows, and the reason a parser can be checked at all when the endpoint is having a
 //! bad afternoon.

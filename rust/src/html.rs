@@ -90,7 +90,7 @@ pub fn parse_ddg_lite(page: &str) -> Vec<Row> {
 /// own snippet anchor.
 ///
 /// Scoped to the container rather than to two flat lists, because a result with no snippet
-/// would otherwise hand its snippet to the next row — the Python's flat pass pairs by "last
+/// would otherwise hand its snippet to the next row - the Python's flat pass pairs by "last
 /// title seen" and gets the same answer only while every row has both halves. The flat pairing
 /// is kept as the fallback for a page shape with no `div.result`.
 pub fn parse_ddg_html(page: &str) -> Vec<Row> {

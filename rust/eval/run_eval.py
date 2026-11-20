@@ -15,7 +15,7 @@ three rows carries the expected domain; a failure is recorded with the urls it d
 median with no evidence under it cannot pass as a result.
 
 Rows are printed as they land, then one summary table. Exit status is 0 when both columns were
-measured, 1 when one implementation could not be run at all — a missing binary is not a miss.
+measured, 1 when one implementation could not be run at all, a missing binary is not a miss.
 """
 
 import argparse
@@ -55,9 +55,7 @@ def run(argv, cwd, timeout=TIMEOUT):
     """(rows, seconds, exit code). Rows are the urls in the numbered output, in order."""
     started = time.monotonic()
     try:
-        proc = subprocess.run(
-            argv, cwd=cwd, capture_output=True, text=True, timeout=timeout
-        )
+        proc = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         return [], timeout, 124
     elapsed = time.monotonic() - started
@@ -111,7 +109,7 @@ def main():
     for i, item in enumerate(queries):
         q, expect = item["q"], item["expect"]
         stamp = beep_pace(stamp)
-        py_urls, py_s, py_rc = run(python_cmd + ["search", q, "--limit", str(a.limit)], ROOT)
+        py_urls, py_s, py_rc = run([*python_cmd, "search", q, "--limit", str(a.limit)], ROOT)
         stamp = beep_pace(stamp)
         rs_urls, rs_s, rs_rc = run(
             [rust, "search", q, "--limit", str(a.limit)], os.path.join(ROOT, "rust")
