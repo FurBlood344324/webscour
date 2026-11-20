@@ -45,7 +45,7 @@ Python does it and a diff should not be about the port's opinion:
 
 ## Tests
 
-    cargo test              # 56 tests: pure parsers + the fixture suite (offline)
+    cargo test              # 57 tests: pure parsers + the fixture suite (offline)
     wsc --self-test         # the same checks, compiled in, so a built binary proves itself
 
 Fixtures live in `tests/fixtures/` and are the exact payload shapes the Python captured.

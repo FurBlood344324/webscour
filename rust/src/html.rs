@@ -86,24 +86,49 @@ pub fn parse_ddg_lite(page: &str) -> Vec<Row> {
     finish(rows)
 }
 
-/// `html.duckduckgo.com/html/`: an anchor per title, an anchor per snippet, in that order.
+/// `html.duckduckgo.com/html/`: each result is a container with its own title anchor and its
+/// own snippet anchor.
+///
+/// Scoped to the container rather than to two flat lists, because a result with no snippet
+/// would otherwise hand its snippet to the next row — the Python's flat pass pairs by "last
+/// title seen" and gets the same answer only while every row has both halves. The flat pairing
+/// is kept as the fallback for a page shape with no `div.result`.
 pub fn parse_ddg_html(page: &str) -> Vec<Row> {
     let doc = Html::parse_document(page);
-    let mut rows: Vec<Row> = Vec::new();
-    let titles = all(&doc, "a.result__a");
-    let snippets = all(&doc, ".result__snippet");
-    for a in titles {
-        rows.push(Row::raw(
+    let a_sel = sel("a.result__a");
+    let s_sel = sel(".result__snippet");
+    let mut rows = Vec::new();
+    for block in all(&doc, "div.result") {
+        let Some(a) = block.select(&a_sel).next() else {
+            continue;
+        };
+        let mut row = Row::raw(
             &text_of(a),
             &crate::net::unwrap_url(a.value().attr("href").unwrap_or("")),
             "",
-        ));
+        );
+        if let Some(s) = block.select(&s_sel).next() {
+            row.snippet = text_of(s);
+        }
+        rows.push(row);
     }
-    for (i, s) in snippets.iter().enumerate() {
-        // A snippet with no title in front of it belongs to nothing: the Python's `items[-1]`
-        // guard drops it the same way.
-        if let Some(r) = rows.get_mut(i) {
-            r.snippet = text_of(*s);
+    if rows.is_empty() {
+        // No container: fall back to the document order the Python walks.
+        let titles: Vec<Row> = all(&doc, "a.result__a")
+            .into_iter()
+            .map(|a| {
+                Row::raw(
+                    &text_of(a),
+                    &crate::net::unwrap_url(a.value().attr("href").unwrap_or("")),
+                    "",
+                )
+            })
+            .collect();
+        rows = titles;
+        for (i, s) in all(&doc, ".result__snippet").iter().enumerate() {
+            if let Some(r) = rows.get_mut(i) {
+                r.snippet = text_of(*s);
+            }
         }
     }
     finish(rows)
@@ -165,6 +190,17 @@ mod tests {
         assert_eq!(rows[0].url, "https://example.com/a");
         assert!(rows[0].snippet.contains("single-stage"), "{}", rows[0].snippet);
         assert_eq!(rows[1].url, "https://example.com/b");
+    }
+
+    #[test]
+    fn a_snippetless_result_does_not_steal_the_next_snippet() {
+        let page = r#"<html><body>
+<div class="result"><h2><a class="result__a" href="https://a/1">One</a></h2></div>
+<div class="result"><h2><a class="result__a" href="https://a/2">Two</a></h2>
+<a class="result__snippet">Second only</a></div></body></html>"#;
+        let rows = parse_ddg_html(page);
+        assert_eq!(rows[0].snippet, "");
+        assert_eq!(rows[1].snippet, "Second only");
     }
 
     #[test]
