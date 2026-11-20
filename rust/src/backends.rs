@@ -32,6 +32,10 @@ pub const SEARX_START_WAIT: f64 = 8.0;
 /// Fewer merged rows than this means an upstream flapped, not that the web is empty.
 pub const SEARX_RETRY_BELOW: usize = 5;
 
+/// A searxng answer thinner than this is a quality signal, not an answer: the scraper chain is
+/// asked as well. Three rows is the floor, because hit@3 with two rows has no room under it.
+pub const SEARX_FALLBACK_BELOW: usize = 3;
+
 /// SearXNG JSON -> (rows, unresponsive engine names). Pure, so `--self-test` can use it.
 pub fn parse_searxng(doc: &Value) -> (Vec<Row>, Vec<String>) {
     let mut got = Vec::new();
@@ -210,16 +214,20 @@ pub fn searx_web(query: &str, limit: usize, category: &str, verbose: bool) -> Re
     // mean the answer is unrelated either. One retry only: a loop here is the scraper behaviour
     // this tool exists to avoid.
     let first_pick = util::prefer_on_topic(query, got.clone(), limit);
-    let first_pick = if first_pick.is_empty() { got.clone() } else { first_pick };
     if got.len() < SEARX_RETRY_BELOW || !util::related(query, &first_pick) {
+        // Both draws are kept. A second draw is another look at the same question, not a
+        // replacement for the first: the rows only the first found are evidence too, and the
+        // merge is deduped and ranked, so the retry can no longer lose a row.
         let (again, dead2) = searx_ask(&params, verbose)?;
-        let again_pick = util::prefer_on_topic(query, again.clone(), limit);
-        if again.len() > got.len() || (!again.is_empty() && util::related(query, &again_pick)) {
-            got = again;
-            dead = dead2;
+        got = merge_draws(got, again);
+        for name in dead2 {
+            if !dead.contains(&name) {
+                dead.push(name);
+            }
         }
     }
-    let got = util::prefer_on_topic(query, got, limit);
+    let pool = util::pick_on_topic(query, got);
+    let got: Vec<Row> = util::rank(query, pool).into_iter().take(limit).collect();
     if got.is_empty() {
         return Err(FetchError::new(format!("no results ({} engines down)", dead.len())));
     }
@@ -227,6 +235,14 @@ pub fn searx_web(query: &str, limit: usize, category: &str, verbose: bool) -> Re
         return Err(FetchError::new("results unrelated to the query"));
     }
     Ok(got)
+}
+
+/// Two draws of the same question as one list: the first draw keeps its order and its rows, the
+/// second contributes what the first did not carry, and a repeated url is kept once.
+pub fn merge_draws(first: Vec<Row>, second: Vec<Row>) -> Vec<Row> {
+    let mut both = first;
+    both.extend(second);
+    util::dedupe(both)
 }
 
 /// The SearXNG `news` category, tolerant: no local SearXNG is not an error for `--fresh`.
@@ -250,15 +266,32 @@ pub fn searx_news(query: &str, limit: usize, verbose: bool) -> Vec<Row> {
     }
 }
 
-fn scrape(name: &str, query: &str, limit: usize) -> Result<Vec<Row>, FetchError> {
+/// Per-row acceptance for a scraped draw.
+///
+/// A page mixes the answer with cached noise, and the set-level test used to throw the whole
+/// page away on one unrelated row, including the answer standing next to it. A row that carries
+/// a query term is kept on its own evidence; the set is refused only when not one row does,
+/// which is the cached-page and bot-check case.
+fn accept_draw(query: &str, rows: Vec<Row>) -> Result<Vec<Row>, FetchError> {
+    if rows.is_empty() {
+        return Ok(rows);
+    }
+    let kept = util::keep_on_topic(query, rows);
+    if kept.is_empty() {
+        return Err(FetchError::new("results unrelated to the query"));
+    }
+    Ok(kept)
+}
+
+fn scrape(name: &str, query: &str, limit: usize, verbose: bool) -> Result<Vec<Row>, FetchError> {
+    // The scrapers are live web queries like any other, and this path used to skip the pace.
+    util::pace(verbose);
     let got = match name {
         "ddg-lite" => {
             let body = format!("q={}", util::quote_plus(query));
             let resp = net::http("https://lite.duckduckgo.com/lite/", Some(&body), None, net::TIMEOUT)?;
             check_blocked(&resp.body)?;
-            let mut rows = html::parse_ddg_lite(&resp.body);
-            rows.truncate(limit);
-            rows
+            html::parse_ddg_lite(&resp.body)
         }
         "ddg-html" => {
             let url = format!(
@@ -267,9 +300,7 @@ fn scrape(name: &str, query: &str, limit: usize) -> Result<Vec<Row>, FetchError>
             );
             let resp = net::http(&url, None, None, net::TIMEOUT)?;
             check_blocked(&resp.body)?;
-            let mut rows = html::parse_ddg_html(&resp.body);
-            rows.truncate(limit);
-            rows
+            html::parse_ddg_html(&resp.body)
         }
         _ => {
             let url = format!(
@@ -279,18 +310,17 @@ fn scrape(name: &str, query: &str, limit: usize) -> Result<Vec<Row>, FetchError>
             );
             let resp = net::http(&url, None, None, net::TIMEOUT)?;
             check_blocked(&resp.body)?;
-            let mut rows = html::parse_bing(&resp.body);
-            rows.truncate(limit);
+            let rows = html::parse_bing(&resp.body);
             if rows.is_empty() && resp.body.contains("There are no results for") {
                 return Err(FetchError::new("the engine returned an empty result page"));
             }
             rows
         }
     };
-    if !got.is_empty() && !util::related(query, &got) {
-        return Err(FetchError::new("results unrelated to the query"));
-    }
-    Ok(got)
+    // The same ranking as the searxng path, so both routes sort alike, and the take(limit) comes
+    // after it: a documentation row that sat below the cut can still reach the output.
+    let kept = accept_draw(query, got)?;
+    Ok(util::rank(query, kept).into_iter().take(limit).collect())
 }
 
 fn check_blocked(page: &str) -> Result<(), FetchError> {
@@ -314,11 +344,15 @@ pub fn web_search<W: FnMut(&str)>(
         Ok(rows) => results = rows,
         Err(e) => warn(&format!("backend searxng: {}", e)),
     }
-    if results.is_empty() && category.is_empty() {
+    if results.len() < SEARX_FALLBACK_BELOW && category.is_empty() {
         for name in ["ddg-lite", "ddg-html", "bing"] {
-            match scrape(name, query, limit) {
+            match scrape(name, query, limit, verbose) {
                 Ok(rows) if !rows.is_empty() => {
-                    results = rows;
+                    // A scraper draw replaces a thin searxng answer only when it is longer: a
+                    // shorter draw is not a better one.
+                    if rows.len() > results.len() {
+                        results = rows;
+                    }
                     break;
                 }
                 Ok(_) => warn(&format!("backend {}: 0 results", name)),
@@ -418,5 +452,54 @@ mod tests {
         let mut dup = rows.clone();
         dup.push(rows[1].clone());
         assert_eq!(util::dedupe(dup).len(), rows.len());
+    }
+
+    #[test]
+    fn a_retry_merges_both_draws_and_keeps_the_first_order() {
+        let first = vec![
+            Row::raw("a", "https://a.example/1", "").with_engines(vec!["brave".into()]),
+            Row::raw("b", "https://b.example/2", ""),
+        ];
+        let second = vec![
+            Row::raw("c", "https://c.example/3", ""),
+            Row::raw("b again", "https://b.example/2", ""),
+            Row::raw("d", "https://d.example/4", ""),
+        ];
+        let merged = merge_draws(first, second);
+        let urls: Vec<String> = merged.iter().map(|r| r.url.clone()).collect();
+        assert_eq!(
+            urls,
+            vec!["https://a.example/1", "https://b.example/2", "https://c.example/3", "https://d.example/4"]
+        );
+        // the first draw's row is the one that stays, provenance and all
+        assert_eq!(merged[1].title, "b");
+        assert_eq!(merged[0].engines, vec!["brave"]);
+        // ranking after the merge is stable, so a draw with no evidence keeps this order
+        let ranked = util::rank("nothing here", merged);
+        let ranked_urls: Vec<String> = ranked.iter().map(|r| r.url.clone()).collect();
+        assert_eq!(ranked_urls, urls);
+    }
+
+    #[test]
+    fn a_scraped_draw_is_accepted_row_by_row() {
+        // a bing page: the answer at four with noise above and below it
+        let page = vec![
+            Row::raw("Sign in", "https://example.org/login", ""),
+            Row::raw("Rate limits", "https://example.net/notes", "unrelated text"),
+            Row::raw("OpenCV: Reading and writing images", "https://example.com/a", ""),
+            Row::raw("C++ interface", "https://docs.opencv.org/4.x/d8/dfe/classcv_1_1VideoCapture.html", "read a frame here"),
+            Row::raw("Cookie policy", "https://example.org/cookies", ""),
+        ];
+        let kept = accept_draw("opencv read video frame", page).expect("a mixed draw must survive");
+        let urls: Vec<&str> = kept.iter().map(|r| r.url.as_str()).collect();
+        // the row whose only match is in the snippet survives too
+        assert_eq!(urls.len(), 2);
+        assert_eq!(urls[0], "https://example.com/a");
+        assert!(urls[1].contains("docs.opencv.org"));
+        // an entirely unrelated page is still refused, so the chain moves on
+        let junk = vec![Row::raw("Sign in", "https://example.org/login", "")];
+        assert!(accept_draw("opencv read video frame", junk).is_err());
+        // an empty draw is not "unrelated", it is empty
+        assert_eq!(accept_draw("opencv read video frame", Vec::new()).unwrap().len(), 0);
     }
 }

@@ -302,6 +302,11 @@ pub fn unwrap_url(href: &str) -> String {
         Some(i) => (&after[..i], &after[i..]),
         None => (after, ""),
     };
+    // No host, no result: brave hands back relative `/go/v1/...` shells, which used to survive
+    // as `https:///go/v1/...`. Every caller retains on a non-empty url, so this drops the row.
+    if authority.is_empty() {
+        return String::new();
+    }
     let query = path_query.find('?').map(|i| &path_query[i + 1..]).unwrap_or("");
     let _ = scheme;
     if authority.contains("duckduckgo.com") && path_query.starts_with("/l/") {
@@ -374,6 +379,18 @@ mod tests {
     #[test]
     fn an_opaque_google_shell_is_dropped() {
         assert_eq!(unwrap_url("https://www.google.com/url?opi=1&uoh=3"), "");
+    }
+
+    #[test]
+    fn a_url_without_a_host_is_dropped() {
+        // brave's relative shells: whatever path they take, the authority is empty
+        assert_eq!(unwrap_url("http:///go/v1/abc"), "");
+        assert_eq!(unwrap_url("https:///go/v1/abc"), "");
+        assert_eq!(unwrap_url("///go/v1/abc"), "");
+        assert_eq!(unwrap_url("/go/v1/abc"), "");
+        assert_eq!(unwrap_url(""), "");
+        // a host is a host, with or without a path
+        assert_eq!(unwrap_url("https://example.net"), "https://example.net");
     }
 
     #[test]
