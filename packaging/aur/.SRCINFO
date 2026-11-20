@@ -1,0 +1,14 @@
+pkgbase = webscour
+	pkgdesc = Keyless web search CLI for agents: local SearXNG first, scraper fallbacks, structured sources
+	pkgver = 0.2.0
+	pkgrel = 1
+	url = https://github.com/FurBlood344324/webscour
+	arch = x86_64
+	arch = aarch64
+	license = MIT
+	makedepends = cargo
+	depends = gcc-libs
+	source = webscour-0.2.0.crate::https://crates.io/api/v1/crates/webscour/0.2.0/download
+	sha256sums = SKIP
+
+pkgname = webscour
