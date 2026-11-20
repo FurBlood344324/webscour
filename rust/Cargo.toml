@@ -6,6 +6,9 @@ rust-version = "1.75"
 description = "Keyless search from the command line: a local SearXNG first, then the scrapers, plus one free API per kind of question."
 license = "MIT"
 repository = "https://github.com/FurBlood344324/webscour"
+# Development artifacts stay out of the .crate tarball: they belong to the repo, not to the
+# published package. tests and its fixtures ship, because cargo test after install uses them.
+exclude = ["REPORT.md", "eval"]
 
 [lib]
 name = "webscour"
