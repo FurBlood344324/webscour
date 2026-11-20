@@ -1,0 +1,16 @@
+{
+ "resultList": {
+  "result": [
+   {
+    "title": "With DOI",
+    "doi": "10.1/a",
+    "journalTitle": "J"
+   },
+   {
+    "title": "No DOI",
+    "pmid": "123",
+    "journalTitle": "J"
+   }
+  ]
+ }
+}

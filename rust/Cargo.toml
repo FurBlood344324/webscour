@@ -1,0 +1,31 @@
+[package]
+name = "webscour"
+version = "0.2.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Keyless search from the command line: a local SearXNG first, then the scrapers, plus one free API per kind of question."
+license = "MIT"
+repository = "https://github.com/FurBlood344324/webscour"
+
+[lib]
+name = "webscour"
+path = "src/lib.rs"
+
+[[bin]]
+name = "wsc"
+path = "src/main.rs"
+
+[dependencies]
+# Blocking HTTP on purpose: every command here is one request in front of a reader, and a
+# runtime would be a second event loop for nothing.
+ureq = "3"
+# Every keyless endpoint answers JSON, and the rows are built from it directly. `preserve_order`
+# keeps a row's keys in the order they were inserted: the Python prints title, url, snippet,
+# engines, published, and a diff of two implementations should not be about key order.
+serde_json = { version = "1", features = ["preserve_order"] }
+# A result page is HTML; a real parser is what keeps a nested <b> inside a snippet from
+# turning into a broken row.
+scraper = "0.24"
+# Atom (arXiv) and RSS (Google News, BBC, rss:) are XML. A DOM reader keeps the two
+# feed shapes in one function instead of a hand-written parser per shape.
+roxmltree = "0.21"
