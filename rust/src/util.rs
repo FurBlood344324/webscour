@@ -423,6 +423,28 @@ mod tests {
     }
 
     #[test]
+    fn host_of_strips_userinfo_port_and_case() {
+        assert_eq!(
+            host_of("https://User:Pass@Docs.Example.COM:8080/a?b#c"),
+            "docs.example.com"
+        );
+        assert_eq!(host_of("http://example.com"), "example.com");
+        assert_eq!(host_of("http://example.com:443/x"), "example.com");
+        // A colon with a non-numeric tail is not a port; the authority stays whole.
+        assert_eq!(host_of("http://example.com:port"), "example.com:port");
+        assert_eq!(host_of("notaurl"), "");
+    }
+
+    #[test]
+    fn the_docs_prefix_survives_a_www() {
+        // The www is stripped before the docs-prefix rule, so both score the +3 and nothing
+        // else: same score, different spellings of the same host.
+        assert_eq!(rank_score("anything", "https://www.docs.example.com/a"), 3);
+        assert_eq!(rank_score("anything", "https://docs.example.com/a"), 3);
+        assert_eq!(rank_score("anything", "https://www.example.com/a"), 0);
+    }
+
+    #[test]
     fn quote_plus_encodes_a_space_as_plus() {
         assert_eq!(quote_plus("a b&c"), "a+b%26c");
         assert_eq!(quote("Tensor_Flow(x)", "()_,-"), "Tensor_Flow(x)");
