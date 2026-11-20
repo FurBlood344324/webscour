@@ -15,7 +15,7 @@
   <a href="https://crates.io/crates/webscour"><img src="https://img.shields.io/crates/v/webscour?color=black" alt="crates.io"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-black" alt="MIT"></a>
   <img src="https://img.shields.io/badge/rust-1.75%2B-black" alt="Rust 1.75+">
-  <img src="https://img.shields.io/badge/platform-linux%20%7C%20macOS-black" alt="Linux and macOS">
+  <img src="https://img.shields.io/badge/platform-linux-black" alt="Linux">
   <img src="https://img.shields.io/badge/dependencies-4-black" alt="Four dependencies">
 </p>
 

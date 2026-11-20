@@ -1,7 +1,7 @@
 # webscour - evidence report
 
-Crate `webscour` 0.2.0, binary `wsc`, in `rust/`. The whole repository is this crate: one binary,
-four direct dependencies, keyless search only. Nothing outside the worktree was touched; no push,
+Crate `webscour` 0.2.0, binary `wsc`, in `rust/`. The repository is the crate and its packaging:
+one binary, four direct dependencies, keyless search only. Nothing outside the worktree was touched; no push,
 no publish.
 
 ## Files
