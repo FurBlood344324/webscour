@@ -249,6 +249,43 @@ const HOST_STOPWORDS: [&str; 26] = [
     "page",
 ];
 
+/// Words that ask for a verdict rather than for a reference page: a comparison, a ranking, an
+/// opinion. On such a question the page that belongs to one of the things being weighed is one
+/// side of the argument, so belonging to a subject counts against it instead of for it.
+const COMPARISON_MARKS: [&str; 13] = [
+    "vs",
+    "versus",
+    "compare",
+    "comparison",
+    "better",
+    "best",
+    "cheapest",
+    "worth",
+    "review",
+    "should",
+    "alternative",
+    "recommend",
+    "why",
+];
+
+/// The query's words, whole and lowercased. [`terms`] keeps four characters and up because it
+/// feeds substring matching; a marker is matched whole, and `vs` and `why` are markers.
+fn query_words(query: &str) -> Vec<String> {
+    query
+        .split(|c: char| !c.is_alphanumeric())
+        .filter(|w| !w.is_empty())
+        .map(|w| w.to_ascii_lowercase())
+        .collect()
+}
+
+/// Does the query ask for a verdict instead of a reference? Whole words only (`versions` is not
+/// `vs`), and a question with no marker in it is answered exactly as it was.
+pub fn comparison_intent(query: &str) -> bool {
+    query_words(query)
+        .iter()
+        .any(|w| COMPARISON_MARKS.contains(&w.as_str()))
+}
+
 /// The host of a url: scheme dropped, userinfo dropped, port dropped. Empty without `://`.
 fn host_of(url: &str) -> String {
     let Some(i) = url.find("://") else {
@@ -278,6 +315,20 @@ fn path_of(url: &str) -> String {
     rest[..end].to_ascii_lowercase()
 }
 
+/// The score a row is sorted by: [`evidence_score`], with its sign flipped when the query asks
+/// for a comparison or an opinion. A comparison question wants the page that weighs both sides,
+/// and every rule in `evidence_score` rewards the page that belongs to one of them, so on such a
+/// question that evidence is what pushes a row down. Zero evidence stays zero either way, and a
+/// query with no marker is scored exactly as before: the damp cannot touch it.
+pub fn rank_score(query: &str, url: &str) -> i32 {
+    let score = evidence_score(query, url);
+    if comparison_intent(query) {
+        -score
+    } else {
+        score
+    }
+}
+
 /// The evidence that a url is the canonical page for the query: +3 for a documentation host
 /// prefix, +1 for a documentation path, +2 when the host name carries a query term of four or
 /// more characters that is not a platform word. At most one of each, so the maximum is 6.
@@ -285,7 +336,7 @@ fn path_of(url: &str) -> String {
 /// The host is read as written (leading `www.` and port aside), not only the label before the
 /// public suffix: the project that owns the docs is very often the leftmost label, as in
 /// `pandas.pydata.org` or `fastapi.tiangolo.com`.
-pub fn rank_score(query: &str, url: &str) -> i32 {
+fn evidence_score(query: &str, url: &str) -> i32 {
     let host = host_of(url);
     let host = host.strip_prefix("www.").unwrap_or(&host);
     let path = path_of(url);
@@ -297,12 +348,21 @@ pub fn rank_score(query: &str, url: &str) -> i32 {
         score += 1;
     }
     let words = terms(query);
-    if words.iter().any(|t| {
-        !HOST_STOPWORDS.contains(&t.as_str()) && host.contains(t.as_str())
-    }) {
+    if host_names_subject(host, &words) {
         score += 2;
     }
     score
+}
+
+/// Does the host name one of the query's terms? Label by label, not as one string: a term that
+/// begins a label names the site (`django` in `docs.djangoproject.com`), while a run of
+/// characters inside a label does not (`travel` in `thriftytraveler.com`).
+fn host_names_subject(host: &str, words: &[String]) -> bool {
+    host.split('.').any(|label| {
+        words
+            .iter()
+            .any(|t| !HOST_STOPWORDS.contains(&t.as_str()) && label.starts_with(t.as_str()))
+    })
 }
 
 /// Stable sort by [`rank_score`], highest first: equal scores keep the order the engine gave
@@ -504,6 +564,87 @@ mod tests {
                 "https://example.net/reference/x",
                 "https://blog.example.org/serde",
                 "https://example.com/filler",
+            ]
+        );
+    }
+
+    #[test]
+    fn a_comparison_question_flips_the_evidence() {
+        // The same three rules, read backwards: the page that belongs to one side is not the
+        // answer to a question that weighs two sides.
+        let q = "rails vs django performance";
+        // 3 for the host prefix plus 1 for the path, flipped: the reference page goes last
+        assert_eq!(rank_score(q, "https://docs.example.org/tutorial/"), -4);
+        // the site of one of the two subjects, flipped
+        assert_eq!(rank_score(q, "https://django.example.org/"), -2);
+        assert_eq!(rank_score(q, "https://blog.example.net/rails-vs-django"), 0);
+        assert_eq!(
+            rank_score("is kubernetes worth the complexity", "https://kubernetes.io/docs/home/"),
+            -3
+        );
+        // no evidence is still no evidence, in either direction
+        assert_eq!(rank_score("rust vs go for backend services", "https://roadmap.sh/golang/vs-rust"), 0);
+    }
+
+    #[test]
+    fn the_damp_needs_a_marker_and_a_marker_is_a_whole_word() {
+        for q in [
+            "rails vs django performance",
+            "cheapest vpn for travel 2024",
+            "why i stopped using notion",
+            "is kubernetes worth the complexity",
+            "which is better, postgres or mysql",
+            "best web framework 2024",
+            "should i use wal mode in sqlite",
+            "railway vs fly.io review",
+        ] {
+            assert!(comparison_intent(q), "missed: {}", q);
+        }
+        for q in [
+            "django migrations squash",
+            "serde rename_all attribute",
+            "sqlite wal mode",
+            "serde rename_all attribute",
+            "versions of the api",
+            "bestiary of the linux kernel",
+            "whys and wherefores",
+        ] {
+            assert!(!comparison_intent(q), "false marker: {}", q);
+        }
+        // and the score of an unmarked query is untouched by the damp
+        assert_eq!(
+            rank_score("django migrations squash", "https://docs.djangoproject.com/en/4.2/topics/migrations/"),
+            5
+        );
+    }
+
+    #[test]
+    fn a_host_names_a_subject_at_a_label_start_only() {
+        // a term that begins a label names the site
+        assert_eq!(rank_score("django migrations squash", "https://docs.djangoproject.com/en/4.2/x"), 5);
+        assert_eq!(rank_score("pandas filter rows", "https://pandas.pydata.org/docs/x"), 3);
+        // a run of characters inside a label does not
+        assert_eq!(rank_score("cheapest vpn for travel 2024", "https://thriftytraveler.com/"), 0);
+        assert_eq!(rank_score("using notion for a year", "https://www.mintnotion.com/x"), 0);
+        assert_eq!(rank_score("using notion for a year", "https://www.notion.so/x"), 2);
+        // the same two rows under a marker: the label rule decides first, the damp after it
+        assert_eq!(rank_score("why i stopped using notion", "https://www.mintnotion.com/x"), 0);
+        assert_eq!(rank_score("why i stopped using notion", "https://www.notion.so/x"), -2);
+    }
+
+    #[test]
+    fn rank_lifts_the_comparison_above_the_vendor_page() {
+        let rows = vec![
+            crate::row::Row::raw("Tutorial", "https://docs.example.org/tutorial/", ""),
+            crate::row::Row::raw("Django", "https://django.example.org/", ""),
+            crate::row::Row::raw("rails vs django", "https://blog.example.net/rails-vs-django", ""),
+        ];
+        assert_eq!(
+            urls(&rank("rails vs django performance", rows)),
+            vec![
+                "https://blog.example.net/rails-vs-django",
+                "https://django.example.org/",
+                "https://docs.example.org/tutorial/",
             ]
         );
     }

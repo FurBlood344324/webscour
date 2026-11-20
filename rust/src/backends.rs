@@ -336,6 +336,18 @@ fn check_blocked(page: &str) -> Result<(), FetchError> {
     Ok(())
 }
 
+/// True when a searxng answer is thin enough to ask the scrapers as well. A category rules the
+/// scrapers out: DuckDuckGo lite and bing cannot be asked for `it` or `news`.
+pub fn wants_fallback(rows: usize, category: &str) -> bool {
+    rows < SEARX_FALLBACK_BELOW && category.is_empty()
+}
+
+/// A scraper draw replaces the searxng answer only when it is strictly longer: a shorter draw is
+/// not a better one, and an equal one carries the same amount of evidence.
+pub fn scraper_replaces(current: usize, drawn: usize) -> bool {
+    drawn > current
+}
+
 /// The whole web chain: SearXNG (unless a category rules the scrapers out), then the fallbacks
 /// in that same order. `warn` is where each lost backend is reported.
 pub fn web_search<W: FnMut(&str)>(
@@ -350,13 +362,11 @@ pub fn web_search<W: FnMut(&str)>(
         Ok(rows) => results = rows,
         Err(e) => warn(&format!("backend searxng: {}", e)),
     }
-    if results.len() < SEARX_FALLBACK_BELOW && category.is_empty() {
+    if wants_fallback(results.len(), category) {
         for name in ["ddg-lite", "ddg-html", "bing"] {
             match scrape(name, query, limit, verbose) {
                 Ok(rows) if !rows.is_empty() => {
-                    // A scraper draw replaces a thin searxng answer only when it is longer: a
-                    // shorter draw is not a better one.
-                    if rows.len() > results.len() {
+                    if scraper_replaces(results.len(), rows.len()) {
                         results = rows;
                     }
                     break;
@@ -388,6 +398,26 @@ pub fn ua() -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_thin_answer_asks_the_scrapers_and_a_category_does_not() {
+        assert!(wants_fallback(0, ""));
+        assert!(wants_fallback(SEARX_FALLBACK_BELOW - 1, ""));
+        assert!(!wants_fallback(SEARX_FALLBACK_BELOW, ""));
+        assert!(!wants_fallback(10, ""));
+        // a category is a route the scrapers cannot take, thin or not
+        assert!(!wants_fallback(0, "it"));
+        assert!(!wants_fallback(SEARX_FALLBACK_BELOW - 1, "news"));
+    }
+
+    #[test]
+    fn a_scraper_draw_replaces_only_a_shorter_answer() {
+        assert!(scraper_replaces(0, 1));
+        assert!(scraper_replaces(2, 3));
+        assert!(!scraper_replaces(3, 3));
+        assert!(!scraper_replaces(3, 2));
+        assert!(!scraper_replaces(0, 0));
+    }
 
     #[test]
     fn the_dead_list_is_the_union_of_both_draws() {
