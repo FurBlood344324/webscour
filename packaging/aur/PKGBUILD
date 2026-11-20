@@ -1,10 +1,10 @@
 # Staged not submitted: AUR registration is closed for now (2026-11-20).
-# pkgver matches the published crates.io release (webscour 0.2.0); the sha256sum below is
+# pkgver matches the published crates.io release (webscour 0.2.1); the sha256sum below is
 # the real .crate tarball hash, filled by hand after the release (updpkgsums re-derives it).
 # Submission procedure is in packaging/aur/README.md. No CI: hands only.
 
 pkgname=webscour
-pkgver=0.2.0
+pkgver=0.2.1
 pkgrel=1
 pkgdesc='Keyless web search CLI for agents: local SearXNG first, scraper fallbacks, structured sources'
 arch=('x86_64' 'aarch64')
@@ -13,7 +13,7 @@ license=('MIT')
 depends=('gcc-libs')
 makedepends=('cargo')
 source=("$pkgname-$pkgver.crate::https://crates.io/api/v1/crates/$pkgname/$pkgver/download")
-sha256sums=('b1b95b7cca9f93b3cf6ba1deb77178b30b7fdc75c9dbfc559e8be4b80ba2efc1')
+sha256sums=('8804a1cac341e8e6f2bb5c93350d2af276c2eec5395f9fac9cf7a64e8e678297')
 
 prepare() {
   cd "$pkgname-$pkgver"
