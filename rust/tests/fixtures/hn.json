@@ -1,0 +1,11 @@
+{
+ "hits": [
+  {
+   "title": "A story",
+   "url": "https://example.com/s",
+   "objectID": "42",
+   "points": 10,
+   "num_comments": 3
+  }
+ ]
+}

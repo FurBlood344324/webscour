@@ -1,0 +1,29 @@
+{
+ "message": {
+  "items": [
+   {
+    "title": [
+     "A paper"
+    ],
+    "DOI": "10.1/x",
+    "URL": "https://doi.org/10.1/x",
+    "container-title": [
+     "Journal of Tests"
+    ],
+    "is-referenced-by-count": 7,
+    "issued": {
+     "date-parts": [
+      [
+       2020,
+       10,
+       1
+      ]
+     ]
+    }
+   },
+   {
+    "DOI": "10.1/no-title"
+   }
+  ]
+ }
+}
