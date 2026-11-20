@@ -42,7 +42,8 @@ restricts the answer to the freshness rows (Google News, BBC, SearXNG news), sor
 date; it is its own source set, so `--source` beside it is a usage error. `--since YYYY-MM-DD` is a
 floor for `--fresh`. `--json` prints the same rows as objects, `indent=1`, keys in insertion order.
 
-Two queries, and what they answered from this machine:
+Two queries, and what they answered from this machine. SearXNG's own answer rotates between calls,
+so the rows, their order and the engine tags are one run; the shapes are what stay.
 
 ```bash
 wsc search "python pyproject packaging" --limit 3
