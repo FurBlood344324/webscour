@@ -99,7 +99,8 @@ pub const MONTHS: [&str; 12] = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-/// Strip every `<...>` tag, then unescape the entities left behind.
+/// Strip every `<...>` tag. Entities are left as they are: the Python contract unescapes only
+/// in the rss path, which calls `html_unescape` itself; every other source prints the raw text.
 pub fn strip_tags(text: &str) -> String {
     let mut out = String::new();
     let mut depth = 0;
@@ -111,7 +112,7 @@ pub fn strip_tags(text: &str) -> String {
             _ => {}
         }
     }
-    html_unescape(&out)
+    out
 }
 
 /// The five named entities plus numeric ones. These feeds use nothing more exotic.
@@ -466,11 +467,7 @@ pub fn parse_npm(doc: &Value) -> Vec<Row> {
     }
     let repo_url = doc
         .get("repository")
-        .and_then(|r| {
-            r.get("url")
-                .and_then(|u| u.as_str())
-                .or_else(|| r.as_str())
-        })
+        .and_then(|r| r.get("url").and_then(|u| u.as_str()))
         .unwrap_or("");
     let mut url = if repo_url.is_empty() {
         get_str(doc, "homepage").to_string()
@@ -880,7 +877,7 @@ pub fn wayback(query: &str, limit: usize) -> Result<Vec<Row>, FetchError> {
         "https://web.archive.org/cdx/search/cdx?url={}&output=json&limit=-{}&fl=timestamp,original,statuscode&filter=statuscode:200",
         target, limit
     );
-    let resp = net::http(&url, None, Some(JSON_ACCEPT), 30)?;
+    let resp = net::http(&url, None, Some(JSON_ACCEPT), 15)?;
     let body = resp.body.trim();
     let doc: Value = if body.is_empty() {
         Value::Array(vec![])
