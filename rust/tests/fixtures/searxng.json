@@ -1,0 +1,47 @@
+{
+ "query": "asyncio cancellation",
+ "results": [
+  {
+   "url": "https://example.org/asyncio",
+   "title": "Asyncio task cancellation",
+   "content": "How cancellation propagates.",
+   "engine": "brave",
+   "engines": [
+    "brave",
+    "naver"
+   ]
+  },
+  {
+   "url": "https://example.net/b",
+   "title": "Second hit",
+   "content": "Other text.",
+   "engine": "bing",
+   "engines": [
+    "bing"
+   ]
+  },
+  {
+   "url": "",
+   "title": "no url, dropped",
+   "content": "x",
+   "engine": "bing",
+   "engines": [
+    "bing"
+   ]
+  }
+ ],
+ "answers": [],
+ "corrections": [],
+ "infoboxes": [],
+ "suggestions": [],
+ "unresponsive_engines": [
+  [
+   "qwant",
+   "Suspended: access denied"
+  ],
+  [
+   "mojeek",
+   "CAPTCHA"
+  ]
+ ]
+}

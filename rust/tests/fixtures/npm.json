@@ -1,0 +1,8 @@
+{
+ "name": "old-thing",
+ "version": "1.0.0",
+ "deprecated": "use new-thing",
+ "repository": {
+  "url": "git+https://github.com/x/old-thing.git"
+ }
+}

@@ -1,0 +1,16 @@
+{
+ "info": {
+  "name": "requests",
+  "version": "2.34.2",
+  "summary": "Python HTTP for Humans.",
+  "requires_python": ">=3.10",
+  "project_url": "https://pypi.org/project/requests/"
+ },
+ "releases": {
+  "2.34.2": [
+   {
+    "upload_time_iso_8601": "2026-05-14T19:25:26.443000Z"
+   }
+  ]
+ }
+}

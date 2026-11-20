@@ -1,0 +1,16 @@
+{
+ "crate": {
+  "name": "serde",
+  "max_version": "1.0.229",
+  "description": "A generic serialization framework",
+  "recent_downloads": 434411314,
+  "updated_at": "2026-07-18T23:05:13Z",
+  "repository": "https://github.com/serde-rs/serde"
+ },
+ "versions": [
+  {
+   "num": "1.0.229",
+   "yanked": true
+  }
+ ]
+}

@@ -1,0 +1,18 @@
+{
+ "result": {
+  "uids": [
+   "2",
+   "1"
+  ],
+  "2": {
+   "title": "Second.",
+   "fulljournalname": "J Two",
+   "pubdate": "2026 Nov 13"
+  },
+  "1": {
+   "title": "First.",
+   "source": "J One",
+   "pubdate": "2026 Nov"
+  }
+ }
+}
